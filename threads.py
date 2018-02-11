@@ -5,10 +5,13 @@ import ast
 from tqdm import tqdm
 import yaml
 import time
+import gc
+import bz2
+import json
 
 
 # PARAMETERS
-data_path = 'E:/Reddit/extracted_files'
+data_path = 'E:/Reddit/bz2_files/'
 starting_year = 2006
 starting_month = 1
 ending_year = 2006
@@ -31,6 +34,7 @@ def string_to_dic(s):
             thread_dico[entry[0]] = entry[1]
     return thread_dico
 
+# create one dictionary per thread that appeared in that period
 def initialize_threads(data_path, starting_year, starting_month, ending_year, ending_month, subreddit):
 
     all_threads = [] # list containing all threads of a given subreddit, each thread is a dictionary 
@@ -43,22 +47,20 @@ def initialize_threads(data_path, starting_year, starting_month, ending_year, en
     os.chdir(data_path)
 
     # go through the post submissions first
-    for filename in tqdm(os.listdir('.')):
-        date = filename[3:].split('-')
+    for filename in os.listdir('.'):
+        date = filename[3:-4].split('-')
         year = int(date[0])
         month = int(date[1])
         # taking files relevant to us
         if ((year >= starting_year) & (year <= ending_year)) & ((month >= starting_month) & (month <= ending_month)):
             if filename.startswith('RS_'):
-                sub_data = (open(filename, 'r').read()).split('\n') # reading the text data
-                print('Number of threads this month: {}'.format(len(sub_data)))
-                for i in range(len(sub_data)):
-                    s = sub_data[i] # this is a string
-                    time1 = time.time()
-                    thread_dico = string_to_dic(s)
-                    time2 = time.time()
-                    times.append(time2-time1)
+                bz_file = bz2.BZ2File(filename)
+                for line in tqdm(bz_file):
                     try:
+                        time1 = time.time()
+                        thread_dico = json.loads(line)
+                        time2 = time.time()
+                        times.append(time2-time1)
                         if (thread_dico != None) & (thread_dico != {}):
                             if thread_dico["subreddit"] == subreddit:
                                 new_thread = {}
@@ -72,22 +74,21 @@ def initialize_threads(data_path, starting_year, starting_month, ending_year, en
                     except KeyError:
                         failed_conversions += 1
                         continue
-
     return all_threads, thread_names, times, failed_conversions
 
+# map commenters ids to threads, and if thread was created before, create a new instance of thread
 def map_comments(all_threads, thread_names, starting_year, starting_month, ending_year, ending_month):
 
     # now go though the comments files
-    for filename in tqdm(os.listdir('.')):
-        date = filename[3:].split('-')
+    for filename in os.listdir('.'):
+        date = filename[3:-4].split('-')
         year = int(date[0])
         month = int(date[1])
         if ((year >= starting_year) & (year <= ending_year)) & ((month >= starting_month) & (month <= ending_month)):
             if filename.startswith('RC_'):
-                sub_data = (open(filename, 'r').read()).split('\n')
-                print('Number of comments this month: {}'.format(len(sub_data)))
-                for i in range(len(sub_data)):
-                    comment_dico = string_to_dic(sub_data[i])
+                bz_file = bz2.BZ2File(filename)
+                for line in tqdm(bz_file):
+                    comment_dico = json.loads(line)
                     if comment_dico != None:
                         try:
                             if comment_dico["subreddit"] == subreddit:
@@ -110,7 +111,6 @@ def map_comments(all_threads, thread_names, starting_year, starting_month, endin
                                         all_threads.append(new_thread)
                         except KeyError:
                             continue
-
     return all_threads
 
 
@@ -126,4 +126,5 @@ if __name__ == '__main__':
 
     print("New total number of threads: {}".format(len(threads)))
     print(threads)
+    np.save("{}_threads.npy".format(subreddit), threads)
 
