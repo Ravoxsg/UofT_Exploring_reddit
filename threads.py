@@ -11,12 +11,14 @@ import json
 
 
 # PARAMETERS
-data_path = 'E:/Reddit/bz2_files/'
-starting_year = 2006
+script_dir=os.getcwd()#we want to save the python files in another folder within the project directory for file organization
+data_path = 'E:/Reddit/bz2_files' 
+data_path = '/Users/vivonasg/Documents/MSCAC_FALL_2017/SEMESTER 2/CSC2552/REDDIT/bz2_files' #I use a mac mate
+starting_year = 2008
 starting_month = 1
-ending_year = 2006
-ending_month = 3
-subreddit = "reddit.com" 
+ending_year = 2008
+ending_month = 1
+subreddit = "funny" 
 
 
 def string_to_dic(s):
@@ -48,17 +50,17 @@ def initialize_threads(data_path, starting_year, starting_month, ending_year, en
 
     # go through the post submissions first
     for filename in os.listdir('.'):
-        date = filename[3:-4].split('-')
-        year = int(date[0])
-        month = int(date[1])
-        # taking files relevant to us
-        if ((year >= starting_year) & (year <= ending_year)) & ((month >= starting_month) & (month <= ending_month)):
-            if filename.startswith('RS_'):
+        if filename.startswith('RS'): # was getting issues since it would pick up files that were not RS_, or RC_
+            date = filename[3:-4].split('-')
+            year = int(date[0])
+            month = int(date[1])
+            # taking files relevant to us
+            if ((year >= starting_year) & (year <= ending_year)) & ((month >= starting_month) & (month <= ending_month)):
                 bz_file = bz2.BZ2File(filename)
                 for line in tqdm(bz_file):
                     try:
                         time1 = time.time()
-                        thread_dico = json.loads(line)
+                        thread_dico = json.loads(line.decode('utf-8'))
                         time2 = time.time()
                         times.append(time2-time1)
                         if (thread_dico != None) & (thread_dico != {}):
@@ -81,14 +83,15 @@ def map_comments(all_threads, thread_names, starting_year, starting_month, endin
 
     # now go though the comments files
     for filename in os.listdir('.'):
-        date = filename[3:-4].split('-')
-        year = int(date[0])
-        month = int(date[1])
-        if ((year >= starting_year) & (year <= ending_year)) & ((month >= starting_month) & (month <= ending_month)):
-            if filename.startswith('RC_'):
+        if filename.startswith('RC_'):
+            date = filename[3:-4].split('-')
+            year = int(date[0])
+            month = int(date[1])
+            if ((year >= starting_year) & (year <= ending_year)) & ((month >= starting_month) & (month <= ending_month)):
+
                 bz_file = bz2.BZ2File(filename)
                 for line in tqdm(bz_file):
-                    comment_dico = json.loads(line)
+                    comment_dico = json.loads(line.decode('utf-8'))
                     if comment_dico != None:
                         try:
                             if comment_dico["subreddit"] == subreddit:
@@ -126,5 +129,15 @@ if __name__ == '__main__':
 
     print("New total number of threads: {}".format(len(threads)))
     print(threads)
-    np.save("{}_threads.npy".format(subreddit), threads)
+    
+    #save threads information as a pickle
+    
+    os.chdir(script_dir)
+    os.chdir('processed_threads/')
+
+    import pickle
+
+    file_name="{}_threads".format(subreddit)
+    with open(file_name,'wb') as fp:
+        pickle.dump(all_threads,fp)
 
