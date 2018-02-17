@@ -11,6 +11,7 @@ import time
 import gc
 import bz2
 import json
+import pickle
 
 
 # PARAMETERS
@@ -18,9 +19,9 @@ data_path = 'E:/bz2_files/' # where are the bz2 files?
 output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/Project/Code/threads' # where do you want to save the threads data?
 starting_year = 2006
 starting_month = 1
-ending_year = 2006
-ending_month = 3
-subreddit = "reddit.com" 
+ending_year = 2008
+ending_month = 1
+subreddit = "funny" 
 
 # manual way to convert string into dictionary - useless now
 def string_to_dic(s):
@@ -53,8 +54,8 @@ def initialize_threads(data_path, starting_year, starting_month, ending_year, en
     os.chdir(data_path)
 
     # go through the post submissions first
-    for filename in os.listdir('.'): 
-        if filename.startswith("RS"):
+    for filename in os.listdir('.'):
+        if filename.startswith('RS'): # was getting issues since it would pick up files that were not RS_, or RC_
             date = filename[3:-4].split('-')
             year = int(date[0])
             month = int(date[1])
@@ -84,6 +85,7 @@ def initialize_threads(data_path, starting_year, starting_month, ending_year, en
                             failed_conversions += 1
                             continue
     return all_threads, all_threads_index, thread_names, times, failed_conversions/lines
+
 
 # map commenters ids to threads, and if thread was created before, create a new instance of thread
 def map_comments(all_threads, all_threads_index, thread_names, starting_year, starting_month, ending_year, ending_month):
@@ -125,6 +127,7 @@ def map_comments(all_threads, all_threads_index, thread_names, starting_year, st
     return all_threads + new_threads, times
 
 
+
 if __name__ == '__main__':
 
     all_threads, all_threads_index, thread_names, times, failed_conversions_ratio = initialize_threads(data_path, starting_year, starting_month, ending_year, ending_month, subreddit)
@@ -137,7 +140,11 @@ if __name__ == '__main__':
 
     print("New total number of threads: {}".format(len(threads)))
     print("Average time to process a comment: {} ms".format(1000*np.mean(np.array(times))))    
-    print(threads)
+    #print(threads)
+
+    # save threads
     os.chdir(output_path)
-    np.save("{}_threads_{}_{}_to_{}_{}.npy".format(subreddit,starting_month,starting_year,ending_month,ending_year), threads)
+    file_name = "{}_threads_{}_{}_to_{}_{}.npy".format(subreddit,starting_month,starting_year,ending_month,ending_year)
+    with open(file_name,'wb') as fp:
+        pickle.dump(threads,fp)
 
