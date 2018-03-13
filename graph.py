@@ -36,9 +36,9 @@ hash_user_id={}
 
 thread_count=0		#add the nodes
 
-num_of_threads= len(all_threads)
+num_of_threads= 500
 
-thread_limit=20
+thread_limit=num_of_threads
 for subthread in all_threads:
 	if thread_count< thread_limit:
 		thread_count+=1
@@ -227,7 +227,6 @@ for vid in range(len(social_network_degree)):
 social_network.delete_vertices(delete_vid_list)
 
 
-
 print("Printing graph")
 
 social_network.vs["name"]= user_name_list#assign each of the names of each node as teh 3 letter code for the airport
@@ -241,6 +240,9 @@ visual_style["vertex_size"] = 2
 visual_style["edge_width"] = social_network.es["weight"]
 visual_style["layout"]=social_network.layout("kk")
 plot(social_network, **visual_style)
+
+
+
 
 
 #social_network= Graph(directed=directed_network_bool)
