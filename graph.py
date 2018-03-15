@@ -18,180 +18,200 @@ all_threads = [] # list containing all threads of a given subreddit, each thread
 # name, author, num_comments, commenters_ids
 thread_names = []
 
-os.chdir(data_path)
+os.chdir(data_path) 
 
+#load the number of threads (format it to label 2 threads)
 file_name="{}_threads".format(subreddit)
 with open(file_name,'rb') as fp:
 	all_threads=pickle.load(fp)
 
-commenter_id_list=[]
-thread_author_id_list=[]
-all_user_id_list=[]
+all_user_id_list=[] #record all of the user id names
+user_count=0 #record the user count 
 
-user_connections={}
-user_count=0
+user_info={} #record all of the relevant information regarding the user
+hash_user_id={} # hash user id table for user_name string to user name id
 
-user_info={}
-hash_user_id={}
+thread_count=0 #counter of the number of threads iterated
 
-thread_count=0		#add the nodes
+num_of_threads= 500 #the number of maximm threads
+thread_limit=num_of_threads #set the limit on the number of threads
 
-num_of_threads= 500
 
-thread_limit=num_of_threads
-for subthread in all_threads:
-	if thread_count< thread_limit:
-		thread_count+=1
-		if thread_count%1000==0:
+for subthread in all_threads: #for each subthread within the commumity 
+	if  thread_count> thread_limit: #if thread_count is less than the thread_limit, than terminate the loop 
+		break
+
+	else: #if thread count is less than limit continue
+		
+		thread_count+=1 #count the thread by 1
+		if thread_count%1000==0: #print the progress in threads iterated per community
 			print(thread_count," out of ",num_of_threads)
 
-		commenters_ids=subthread["commenters_ids"]
+		commenters_ids=subthread["commenters_ids"] #get all of the users who comment in the thread
 		
-		author=subthread["author"]
+		author=subthread["author"] #get the author name
 
-		if author not in thread_author_id_list:
-			thread_author_id_list.append(author)
-			if author not in all_user_id_list: #is the author in the list
-				all_user_id_list.append(author)
-				user_info[author]={}
-				user_info[author]["user_connections"]={}
-				user_count+= 1 #count the author
+
+		if author not in all_user_id_list: #is the author in the list of users? If not then....
+			all_user_id_list.append(author)#add user to list
+			user_info[author]={} #create a key for the author in the dictionary
+			user_info[author]["user_connections"]={} #add user connections
+			user_count+= 1 #count the author as a apart of the new user count ()
 				
 
+		#if there are users that have commented in the thread in question
 		if len(commenters_ids)>0:
+
+			#Find all of the users in the post, record their relationship with the author 
 			for i in range(len(commenters_ids)): #go through the commenter id's and create connections with the users
-				id_commenter= commenters_ids[i]
-				if id_commenter in user_info[author]["user_connections"]: #if this already exists
-					if id_commenter!=author: #we are not interested in the author commenting on themselves
-						user_info[author]["user_connections"][id_commenter].append(('a', thread_count,i+1)) #save the type of relationship as well as the index of the commmenter
-				else:
-					if id_commenter!=author: 
+				id_commenter= commenters_ids[i] #user of interest (we want to find who is connected to this user in this sub-thread)
+				
+				if id_commenter!=author: #we dont want the interacting users being the same, (avoid redundent interactiosn)
+					
+					if id_commenter in user_info[author]["user_connections"]: #has this user-user interaction been previously recorded 
+						#we are not interested in the author commenting on themselves
+
+						#save the type of relationship as well as the index of the commmenter. In this case the relationship between the author and the commentator is a
+						#the thread_count represents the thread_id within the community
+						#the i+1 represents the relative position between the author (user of interest) and the other user
+						#IMPORTANT: positive distances between users mean that user_2 is commenting after the user of interest
+
+						user_info[author]["user_connections"][id_commenter].append(('a', thread_count,i+1)) 
+					
+					else:
 						user_info[author]["user_connections"][id_commenter]=[('a', thread_count,i+1)] # first initialize the list, save the type of relationship as well as the index of the commmenter
 
-		if len(commenters_ids)>0:
+
+			#NOW we focus on the building interactions that involve commenting users being the users of interest
+
 			for i in range(len(commenters_ids)):
-				id_commenter=commenters_ids[i]
+
+				id_commenter=commenters_ids[i] #user of interest
+
+				if id_commenter not in all_user_id_list: # has the user of interest been seen before?
+					all_user_id_list.append(id_commenter) #add user of interest to list of recorded users
+					
+					#establish datastructure for user
+					user_info[id_commenter]={} 
+					user_info[id_commenter]["user_connections"]={}
+					user_count+= 1 #count the user
 
 
-				if id_commenter not in commenter_id_list:
+				#connect the user of interest with the author (negative distance because user is commenting with author's post)
 
-					commenter_id_list.append(id_commenter)#adds commenter to the list of originally existant commenters
-					if id_commenter not in all_user_id_list:
-						all_user_id_list.append(id_commenter)
-						user_info[id_commenter]={}
-						user_info[id_commenter]["user_connections"]={}
-						user_count+= 1 #count the user
+				if author!=id_commenter: #ensure the user is not the author to avoid interaction redundancy
+					if author in user_info[id_commenter]["user_connections"]: #if this already exists
+						#save the type of relationship as well as the index of the commmenter
+						user_info[id_commenter]["user_connections"][author].append(('a', thread_count,-(i+1)))
+					else:
+						# first initialize the list, save the type of relationship as well as the index of the commmenter
+						user_info[id_commenter]["user_connections"][author]=[('a', thread_count,-(i+1))] 
 
 
-
-				if author in user_info[id_commenter]["user_connections"]: #if this already exists
-					if author!=id_commenter:
-						user_info[id_commenter]["user_connections"][author].append(('a', thread_count,-(i+1))) #save the type of relationship as well as the index of the commmenter
-				else:
-					if author!=id_commenter:
-						user_info[id_commenter]["user_connections"][author]=[('a', thread_count,-(i+1))] # first initialize the list, save the type of relationship as well as the index of the commmenter
-
-				if len(commenters_ids)>1:
-					for j in range(len(commenters_ids)):
-						id_commenter_j= commenters_ids[j]
+				#record all user/user interactions, positive distance means that user_j has commented after user_i. 
+				if len(commenters_ids)>1: #if there are more than one user in the post
+					for j in range(len(commenters_ids)): #iterate through all users  
+						id_commenter_j= commenters_ids[j] #second user 
 						if id_commenter_j in user_info[id_commenter]["user_connections"]: #if this already exists
 							if id_commenter!=id_commenter_j: #we are not interested in the author commenting on themselves
-								user_info[id_commenter]["user_connections"][id_commenter_j].append(('c', thread_count,j-i)) #save the type of relationship as well as the index of the commmenter
+								#save the type of relationship as well as the index of the commmenter
+								user_info[id_commenter]["user_connections"][id_commenter_j].append(('c', thread_count,j-i)) 
 						else:
 							if id_commenter!=id_commenter_j:
-								user_info[id_commenter]["user_connections"][id_commenter_j]=[('c', thread_count,j-i)] # first initialize the list, save the type of relationship as well as the index of the commmenter
+								# first initialize the list, save the type of relationship as well as the index of the commmenter
+								user_info[id_commenter]["user_connections"][id_commenter_j]=[('c', thread_count,j-i)] 
 		
 
-counter=0
+counter=0 #counter
 user_name_list=[]
 for user_name_i in list(user_info.keys()):
 	hash_user_id[user_name_i]=counter
 	user_name_list.append(user_name_i)
 	counter+=1
 
+def connection_attribute_collection(connections_list, attr_index): #collects all of the attributes
+	attr_list= [single_connection[attr_index] for single_connection in connections_list]
+	return attr_list
 
+
+#calculate the distance decay between two functions
+
+def distance_decay_function(connection_distances_list,connection_types_list,a_weight_pheta=[1,1],c_weight_pheta=[1,1]):
+	distance_decay=[]
+	pheta_0,pheta_1= (0,0)
+	for connection_distance,connection_type in list(zip(connection_distances_list,connection_types_list)):
+		#num_threads_factor*author_factor*exp(-co*b)
+		#weight the decay factor based on attributes
+		if connection_type=='a':
+			pheta_0=np.sign(connection_distance)*a_weight_pheta[0]
+			pheta_1=np.abs(a_weight_pheta[1])
+		if connection_type=='c':
+			pheta_0=np.sign(connection_distance)*c_weight_pheta[0]
+			pheta_1=np.abs(c_weight_pheta[1])
+
+		#the farther the distance the lower the follow. The function also is changed by pheta_0 and pheta_1 which depend on the users title
+		distance_decay.append(pheta_0*np.exp(-np.abs(pheta_1*connection_distance)))
+
+	return distance_decay
+
+#def loyalty_function():
+
+
+
+print("Configuring Weights...")
 
 id_pairs=[] # list of tuples of connection id's
 pair_weight=[] #list of weights for each id_pair
-
-print("Configuring Weights...")
 counter=0
+
+
 for user_name_i in list(user_info.keys()):
 	counter+=1
 	if counter%1000==0: 
 		print(counter," out of ", user_count)
 	user_i_connections=user_info[user_name_i]["user_connections"] #get the connections of user i
-	user_id_i=hash_user_id[user_name_i]#get the user hash id number
 
-	for user_name_j in list(user_i_connections.keys()):
+	for user_name_j in list(user_i_connections.keys()): #iterate through connected users of user_i
 		
-		homo_connection_instances=user_i_connections[user_name_j]
-		user_id_j=hash_user_id[user_name_j]#get the user hash id number
+		connection_instances=user_i_connections[user_name_j] #find the connection instances between user i and user j 
+		
 		
 		threads_visited=[]#number of different threads a connection has been to
 
-		distance=[] #sum of the connections distances
-		pair_score=[] #score of the strength and direction of the pair
 
-		for k in range(len(homo_connection_instances)):
-
-			connection_info=homo_connection_instances[k]
-
-			connection_type=connection_info[0]#author-commenter or commenter-commenter relationship
-			connection_thread=connection_info[1]#connection thread id number
-			connection_distance=connection_info[2] #relative disance between two commenters
-
-			author_weight_pheta_0=-1
-			author_weight_pheta_1=1
-
-			commenter_weight_pheta_0=1
-			commenter_weight_pheta_1=1 #distance decay factor
-
-			#num_threads_factor*author_factor*exp(-co*b)
-			#weight the decay factor based on attributes
-			if connection_type=='a':
-				pheta_0=np.sign(connection_distance)*author_weight_pheta_0
-				pheta_1=np.abs(author_weight_pheta_1)
-			if connection_type=='c':
-				pheta_0=np.sign(connection_distance)*commenter_weight_pheta_0
-				pheta_1=np.abs(commenter_weight_pheta_1)
-
-
-
-			#the farther the distance the lower the follow. The function also is changed by pheta_0 and pheta_1 which depend on the users title
-			distance_decay_score=pheta_0*np.exp(-np.abs(pheta_1*connection_distance))
-			
-
-			#check the number of threads the conneciton pair has visited
-			threads_visited.append(connection_thread)
-
-			distance.append(connection_distance) #append distance function to disntace
-			pair_score.append(distance_decay_score) #append distance_decays_score to pair_score
-
-
+		#connection thread id number
+		threads_visited=connection_attribute_collection(connections_list=connection_instances, attr_index=1) #sum of the connections distances
 		unique_threads_visited=list(set(threads_visited))#get the unique threads visited
-		num_unique_threads_visited=len(unique_threads_visited)
-
-		thread_score_factor=1
-
-		#find the number of threads visited
-		distance=np.asarray(distance)
+		thread_score_factor=1 #scale the score based on the number of unique threads visited? for now keep it as 1
 
 
-		pair_score=np.asarray(pair_score)#convert to array
-
-		pair_score_sum=np.sum(pair_score)#sum the non abs score terms
-		pair_score_abs_sum=np.sum(np.abs(pair_score)) #sum the abs score terms of each score
-		final_pair_score=thread_score_factor*pair_score_abs_sum
-
+		#author-commenter or commenter-commenter relationship
+		connection_types=connection_attribute_collection(connections_list=connection_instances, attr_index=0) 
 		
+		#relative disance between two commenters
+		distances=connection_attribute_collection(connections_list=connection_instances, attr_index=2) 
+		
+		distances_decay= distance_decay_function(connection_distances_list=distances,
+												connection_types_list=connection_types,
+												a_weight_pheta=[-1,1],
+												c_weight_pheta=[1,1]) #score of the strength and direction of the pair
+
+
+
+		connection_score_sum=np.sum(np.asarray(thread_score_factor*distances_decay))#sum the non abs score terms
+		connection_score_abs_sum=np.sum(np.abs(np.asarray(thread_score_factor*distances_decay))) #sum the abs score terms of each score
+
+		weight_score= connection_score_abs_sum
 		
 		
 		#we should add more complicated connections depending on the distance between commentators, order of comment, and the activity level of the author
 
-		if pair_score_sum>0:
+		user_id_i=hash_user_id[user_name_i]#get the user hash id number
+		user_id_j=hash_user_id[user_name_j]#get the user hash id number
+
+		if connection_score_sum>0:
 			id_pairs.append((user_id_i,user_id_j))#get the pair id pairs
-			pair_weight.append(final_pair_score)
+			pair_weight.append(weight_score)
 
 		#import pdb; pdb.set_trace()
 
