@@ -1,5 +1,6 @@
 # Gives a certain number of subreddits all distinct and containing a minimum number of threads
 # Also passes these subreddits names to a word2vec embeddings to get their cosine similarity with a given subreddit name. 
+# This script is used to generate names of subreddits of each group (random, similar, clashing)
 
 import numpy as np 
 import os
@@ -16,13 +17,13 @@ import gensim
 from sklearn.metrics.pairwise import cosine_similarity
 
 data_path = 'E:/bz2_files/' # where are the bz2 files?
-home_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Code'
-starting_year = 2016
+home_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Code/subreddit names/'
+starting_year = 2006
 starting_month = 1
-ending_year = 2016
+ending_year = 2006
 ending_month = 3
-min_threads = 50
-nb_of_subr = 100
+min_threads = 10
+nb_of_subr = 10
 model = gensim.models.KeyedVectors.load_word2vec_format('C:/Users/mathi/Documents/DATA SCIENCE/KAGGLE/Toxic_Kaggle/GoogleNews-vectors-negative300.bin', binary=True)
 random_thres = 0.025
 similar_thres = 0.4
@@ -60,30 +61,31 @@ def screen_threads(data_path, starting_year, starting_month, ending_year, ending
 # randomly select distinct subreddits that have enough threads
 def random_subs(subreddits, min_threads, nb_of_subr):
 
-    if (nb_of_subr >= len(subreddits)):
-        print("WARNING: you are trying to grab more subreddits than there actually are")
-
     keys = list(subreddits.keys())
+
+    if (nb_of_subr >= len(keys)):
+        print("WARNING: you are trying to grab more subreddits than there actually are")
 
     indices = []
     names = []
 
     attempts = 0
-    while (attempts <= 5*len(subreddits)) and (len(indices) < nb_of_subr):
+    while (attempts <= 3*len(keys)) and (len(indices) < nb_of_subr):
+        #print(attempts)
         i = np.random.randint(len(keys))
         attempts += 1
-        while not(subreddits[keys[i]] >= min_threads) or (i in indices):
+        while ((subreddits[keys[i]] < min_threads) or (i in indices)) and (attempts <= 3*len(keys)):
             i = np.random.randint(len(keys))
             attempts += 1
-        indices.append(i)
-        names.append(keys[i])
+        if subreddits[keys[i]] >= min_threads:
+            indices.append(i)
+            names.append(keys[i])
 
     return names
 
 # compute the cosine similarity between a group of subreddits and a given subreddit under study 
 # returns a dictionary whose keys are subreddit names and values cosine similarities
 def group_similarity(pair_element, names):
-
 
     ref = model[pair_element]
     similarities = {}
@@ -126,32 +128,37 @@ def similarities(names, home_path):
             similarities[name] = 'Subreddit name not recognized by the word2vec model'
 
     # write similarities dico
-    with open('similarities.csv', 'w') as file:
+    with open('similarities_{}_{}_to_{}_{}.csv'.format(starting_year, starting_month, ending_year, ending_month), 'w') as file:
         file.write("subreddit"+','+"subreddit"+"\n")
         for key in similarities.keys():
             file.write(key+"\n")
             if type(similarities[key]) != str:
                 for name in similarities[key].keys():
                     file.write(","+name+','+str(similarities[key][name])+"\n")
+    print('We finished writing similarities between all subreddits')
 
     # write random pairs
-    with open('random_pairs.csv', 'w') as file:
+    with open('random_pairs_{}_{}_to_{}_{}.csv'.format(starting_year, starting_month, ending_year, ending_month), 'w') as file:
          file.write("subreddit 1"+','+"subreddit 2"+"\n")
          for pair in random_pairs:
             file.write(pair[0]+','+pair[1]+'\n')
+    print('We finished writing random pairs')
 
     # write similar pairs
-    with open('similar_pairs.csv', 'w') as file:
+    with open('similar_pairs_{}_{}_to_{}_{}.csv'.format(starting_year, starting_month, ending_year, ending_month), 'w') as file:
          file.write("subreddit 1"+','+"subreddit 2"+"\n")
          for pair in similar_pairs:
-            file.write(pair[0]+','+pair[1]+'\n')    
+            file.write(pair[0]+','+pair[1]+'\n')
+    print('We finished writing similar pairs')    
 
 
 if __name__ == '__main__':
 
     subreddits = screen_threads(data_path, starting_year, starting_month, ending_year, ending_month)
+    print('In this period, we have found {} subreddits'.format(len(list(subreddits.keys()))))
+
     names = random_subs(subreddits, min_threads, nb_of_subr)
-    print(names)
+    print('We have selected the following {} subreddits matching your criteria: {}'.format(len(names),names))
+
     similarities(names, home_path)
-    test_cosine = group_similarity('prolife', names)
-    print(test_cosine)
+
