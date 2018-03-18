@@ -1,6 +1,5 @@
-# Gives a certain number of subreddits all distinct and containing a minimum number of threads
-# Also passes these subreddits names to a word2vec embeddings to get their cosine similarity with a given subreddit name. 
 # This script is used to generate names of subreddits of each group (random, similar, clashing)
+# It goes through all subreddits and finds some above a certain number of threads
 
 import numpy as np 
 import os
