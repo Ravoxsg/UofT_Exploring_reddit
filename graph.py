@@ -33,7 +33,7 @@ hash_user_id={} # hash user id table for user_name string to user name id
 
 thread_count=0 #counter of the number of threads iterated
 
-num_of_threads= 500 #the number of maximm threads
+num_of_threads= 5000 #the number of maximm threads
 thread_limit=num_of_threads #set the limit on the number of threads
 
 
