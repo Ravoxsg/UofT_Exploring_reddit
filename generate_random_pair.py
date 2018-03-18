@@ -18,12 +18,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 data_path = 'E:/bz2_files/' # where are the bz2 files?
 home_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Code/subreddit names/'
-starting_year = 2006
+starting_year = 2016
 starting_month = 1
-ending_year = 2006
-ending_month = 3
-min_threads = 10
-nb_of_subr = 10
+ending_year = 2016
+ending_month = 6
+min_threads = 60
+nb_of_subr = 300
 model = gensim.models.KeyedVectors.load_word2vec_format('C:/Users/mathi/Documents/DATA SCIENCE/KAGGLE/Toxic_Kaggle/GoogleNews-vectors-negative300.bin', binary=True)
 random_thres = 0.025
 similar_thres = 0.4
@@ -70,11 +70,11 @@ def random_subs(subreddits, min_threads, nb_of_subr):
     names = []
 
     attempts = 0
-    while (attempts <= 3*len(keys)) and (len(indices) < nb_of_subr):
+    while (attempts <= 4*len(keys)) and (len(indices) < nb_of_subr):
         #print(attempts)
         i = np.random.randint(len(keys))
         attempts += 1
-        while ((subreddits[keys[i]] < min_threads) or (i in indices)) and (attempts <= 3*len(keys)):
+        while ((subreddits[keys[i]] < min_threads) or (i in indices)) and (attempts <= 4*len(keys)):
             i = np.random.randint(len(keys))
             attempts += 1
         if subreddits[keys[i]] >= min_threads:
