@@ -18,10 +18,10 @@ import pickle
 data_path = 'E:/bz2_files/' # where are the bz2 files?
 output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Code/threads' # where do you want to save the threads data?
 starting_year = 2016
-starting_month = 6
+starting_month = 1
 ending_year = 2016
-ending_month = 8
-subreddit = "esist" 
+ending_month = 6
+subreddit = "TheRedPill" 
 
 # manual way to convert string into dictionary - useless now
 def string_to_dic(s):
