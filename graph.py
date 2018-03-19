@@ -8,22 +8,18 @@ import math
 import pickle
 import random
 
+from process_threads import merge_threads
+
+
 # PARAMETERS
-data_path = 'processed_threads' #I use a mac mate
+starting_year = 2016
+starting_month = 1
+ending_year = 2016
+ending_month = 3
+subreddit = "kitesurfing"
 
-subreddit = "obama" 
+all_threads =  merge_threads(subreddit, starting_year, starting_month, ending_year, ending_month)
 
-all_threads = [] # list containing all threads of a given subreddit, each thread is a dictionary 
-# each thread dictionary contains the following entries:
-# name, author, num_comments, commenters_ids
-thread_names = []
-
-os.chdir(data_path) 
-
-#load the number of threads (format it to label 2 threads)
-file_name="{}_threads".format(subreddit)
-with open(file_name,'rb') as fp:
-	all_threads=pickle.load(fp)
 
 all_user_id_list=[] #record all of the user id names
 user_count=0 #record the user count 

@@ -16,12 +16,12 @@ import pickle
 
 # PARAMETERS
 data_path = 'E:/bz2_files/' # where are the bz2 files?
-output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/Project/Code/threads' # where do you want to save the threads data?
+output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Code/threads' # where do you want to save the threads data?
 starting_year = 2016
-starting_month = 1
+starting_month = 6
 ending_year = 2016
-ending_month = 10
-subreddit = "Kickabout" 
+ending_month = 8
+subreddit = "esist" 
 
 # manual way to convert string into dictionary - useless now
 def string_to_dic(s):
@@ -39,7 +39,7 @@ def string_to_dic(s):
             thread_dico[entry[0]] = entry[1]
     return thread_dico
 
-# create one dictionary per thread that appeared in that period
+# create one dictionary per thread that appeared in that period in this suberredit
 def initialize_threads(data_path, starting_year, starting_month, ending_year, ending_month, subreddit):
 
     all_threads = [] # list containing all threads of a given subreddit, each thread is a dictionary 
@@ -127,24 +127,38 @@ def map_comments(all_threads, all_threads_index, thread_names, starting_year, st
     return all_threads + new_threads, times
 
 
-
 if __name__ == '__main__':
 
-    all_threads, all_threads_index, thread_names, times, failed_conversions_ratio = initialize_threads(data_path, starting_year, starting_month, ending_year, ending_month, subreddit)
-
-    print("Total number of threads: {}".format(len(all_threads)))
-    print("Success rate of dictionary conversion: {}".format(1-failed_conversions_ratio))
-    print("Average time to convert into a dico: {} ms".format(1000*np.mean(np.array(times))))
-
-    threads, times = map_comments(all_threads, all_threads_index, thread_names, starting_year, starting_month, ending_year, ending_month)
-
-    print("New total number of threads: {}".format(len(threads)))
-    print("Average time to process a comment: {} ms".format(1000*np.mean(np.array(times))))    
-    #print(threads)
-
-    # save threads
     os.chdir(output_path)
-    file_name = "{}_threads_{}_{}_to_{}_{}.npy".format(subreddit,starting_month,starting_year,ending_month,ending_year)
-    with open(file_name,'wb') as fp:
-        pickle.dump(threads,fp)
+    if not os.path.exists(subreddit):
+        os.makedirs(subreddit)
 
+    for year in range(starting_year, ending_year + 1):
+
+        print('Currently in year: {}'.format(year))
+
+        if starting_year == ending_year:
+            first_month = starting_month
+            last_month = ending_month
+        else:
+            if year == starting_year:
+                first_month = starting_month
+                last_month = 12
+            elif year == ending_year:
+                first_month = 1
+                last_month = ending_month
+            else:
+                first_month = 1
+                last_month = 12
+
+        for month in range(first_month, last_month + 1):
+
+            print('Currently in month: {}'.format(month))
+
+            all_threads, all_threads_index, thread_names, times, failed_conversions_ratio = initialize_threads(data_path, year, month, year, month, subreddit)
+            threads, times = map_comments(all_threads, all_threads_index, thread_names, year, month, year, month)
+
+            os.chdir(output_path+'/{}'.format(subreddit))
+            file_name = "{}_threads_{}_{}.npy".format(subreddit, year, month)
+            with open(file_name,'wb') as fp:
+                pickle.dump(threads, fp)
