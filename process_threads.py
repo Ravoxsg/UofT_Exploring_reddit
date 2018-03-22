@@ -12,17 +12,18 @@ import bz2
 import json
 import pickle
 
-
+import pdb
 def merge_threads(subreddit, starting_year, starting_month, ending_year, ending_month):
-
-    os.chdir('threads/{}'.format(subreddit))
-
+   
+    os.chdir('/Users/vivonasg/Documents/MSCAC_FALL_2017/SEMESTER_2/CSC2552/Exploring_Reddit')
+    os.chdir('threads')
+    os.chdir(subreddit)
 
     # load all threads data
 
     monthly_threads = []
 
-    for year in range(starting_year, ending_year + 1):
+    for year in range(2016, 2016 + 1):
         if starting_year == ending_year:
             first_month = starting_month
             last_month = ending_month
