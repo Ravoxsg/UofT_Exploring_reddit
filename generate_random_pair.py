@@ -17,53 +17,22 @@ from sklearn.metrics.pairwise import cosine_similarity
 import re
 import nltk
 
-
+from nlp_utils import preproc
 
 
 data_path = 'E:/bz2_files/' # where are the bz2 files?
 home_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Code/subreddit names/'
-starting_year = 2016
+starting_year = 2006
 starting_month = 1
-ending_year = 2016
-ending_month = 1
-min_threads = 100*(ending_month - starting_month + 1)
-nb_of_subr = 50
-model = gensim.models.KeyedVectors.load_word2vec_format('C:/Users/mathi/Documents/DATA SCIENCE/KAGGLE/Toxic_Kaggle/GoogleNews-vectors-negative300.bin', binary=True)
-random_thres = 0.025
-similar_thres = 0.4
-attempts_coeff = 4
+ending_year = 2006
+ending_month = 3
+min_threads = 5*(ending_month - starting_month + 1)
+nb_of_subr = 20
+random_thres = 0.02 # lower than that means random
+similar_thres = 0.5 # higher than that means similar
+attempts_coeff = 5
+clashing_pairs = ["prolife","prochoice","The_Donald","esist","Feminism","TheRedPill","climatechange","climateskeptics"]
 
-
-# process the name of each subreddit
-def preproc(name):
-    # 1: remove underscores
-    temp = name.replace('_','')
-    # 2: remove numbers
-    temp = re.sub(r'[0-9]+', '', temp)
-    # 3: split on capital letters
-    split = re.findall('[A-Z][^A-Z]*', temp)
-    if split == []:
-        split = [temp]
-    # 4: part-of-speech tagging to identify proper nouns
-    tagged_sent = nltk.pos_tag(split)
-    vectors = []
-    for i in range(len(tagged_sent)):
-        if tagged_sent[i][1] == 'NNP':
-            try:
-                embedding = model[tagged_sent[i][0]]
-                vectors.append(embedding)
-            except KeyError:
-                continue
-        else:
-            try:
-                embedding = model[tagged_sent[i][0].lower()]
-                vectors.append(embedding)
-            except KeyError:
-                continue            
-    if vectors == []:
-        return 'Subreddit name not recognized by the word2vec model'
-    else:
-        return np.mean(np.array(vectors), axis=0)
 
 # grab all subreddits in the given period
 def screen_threads(data_path, starting_year, starting_month, ending_year, ending_month):
@@ -110,30 +79,50 @@ def random_subs(subreddits, min_threads, nb_of_subr):
         #print(attempts)
         i = np.random.randint(len(keys))
         attempts += 1
-        while ((subreddits[keys[i]] < min_threads) or (i in indices)) and (attempts <= 4*len(keys)):
+        while ((subreddits[keys[i]] < min_threads) or (i in indices)) and (attempts <= attempts_coeff*len(keys)):
             i = np.random.randint(len(keys))
             attempts += 1
-        if subreddits[keys[i]] >= min_threads:
+        if (subreddits[keys[i]] >= min_threads) and not(i in indices):
             indices.append(i)
             names.append(keys[i])
 
     return names
 
-# compute the cosine similarity between a group of subreddits and a given subreddit under study 
-# returns a dictionary whose keys are subreddit names and values cosine similarities
+# find similar and random subreddits associated to a given subreddit (member of a clashing pair for instance)
 def group_similarity(pair_element, names):
 
-    ref = prepoc(pair_element)
-    similarities = {}
+    os.chdir(home_path+"clashing_pairs_specific/")
+    ref = preproc(pair_element)
 
-    for name in names:
-        embedding = preproc(name)
-        if type(embedding) != str:
-            similarities[name] = cosine_similarity(ref.reshape((1,300)), embedding.reshape((1,300)))[0][0]
-        else:
-            similarities[name] = embedding
+    if type(ref) != str:
 
-    return similarities
+        similar = []
+        random = []
+
+        for name in names:
+            embedding = preproc(name)
+            if type(embedding) != str:
+                cos = cosine_similarity(ref.reshape((1,300)), embedding.reshape((1,300)))[0][0]
+                if abs(cos) >= similar_thres:
+                    similar.append((name, cos))
+                if abs(cos) <= random_thres:
+                    random.append((name, cos))
+
+        similar = sorted(similar, key=lambda x: x[1], reverse=True)
+        random = sorted(random, key=lambda x: x[1], reverse=True)
+        
+        with open('{}_similarities.csv'.format(pair_element), 'w') as file:
+            file.write('similar'+'\n')
+            for i in range(len(similar)):
+                file.write(str(similar[i][0])+','+str(similar[i][1])+'\n')
+            file.write('random'+'\n')
+            for i in range(len(random)):
+                file.write(str(random[i][0])+','+str(random[i][1])+'\n')
+        print("We finished finding subreddits associated with: {}".format(pair_element))
+
+    else:
+
+        print("Sorry, {} was not recognized by the word embeddings model".format(pair_element))
 
 # computes cosine similarity of all pairs of subreddits
 def similarities(names, home_path):
@@ -144,9 +133,14 @@ def similarities(names, home_path):
     random_pairs = []
     similar_pairs = []
 
+    n_recognized = 0
+    n_random = 0
+    n_similar = 0
+
     for name in names:
         embedding = preproc(name)
         if type(embedding) != str:
+            n_recognized += 1
             similarities[name] = {}
             for other_name in names:
                 if other_name != name:
@@ -157,13 +151,17 @@ def similarities(names, home_path):
                         if abs(cos) <= random_thres:
                             if not([other_name, name] in random_pairs):
                                 random_pairs.append([name,other_name])
+                                n_random += 1
                         if abs(cos) >= similar_thres:
                             if not([other_name, name] in similar_pairs):
-                                similar_pairs.append([name,other_name])
+                                similar_pairs.append(([name,other_name], cos))
+                                n_similar += 1
                     else:
                         similarities[name][other_name] = other_embedding
         else:
             similarities[name] = embedding
+
+    similar_pairs = sorted(similar_pairs, key=lambda x: x[1], reverse=True)
 
     # write similarities dico
     with open('similarities_{}_{}_to_{}_{}_{}_subs_{}_per_month.csv'.format(starting_year, starting_month, ending_year, ending_month, nb_of_subr, int(min_threads/(ending_month-starting_month+1))), 'w') as file:
@@ -186,17 +184,25 @@ def similarities(names, home_path):
     with open('similar_pairs_{}_{}_to_{}_{}_{}_subs_{}_per_month.csv'.format(starting_year, starting_month, ending_year, ending_month, nb_of_subr, int(min_threads/(ending_month-starting_month+1))), 'w') as file:
          file.write("subreddit 1"+','+"subreddit 2"+"\n")
          for pair in similar_pairs:
-            file.write(pair[0]+','+pair[1]+'\n')
-    print('We finished writing similar pairs')    
+            file.write(pair[0][0]+','+pair[0][1]+'\n')
+    print('We finished writing similar pairs')
+
+    return n_recognized/len(names), n_random, n_similar    
 
 
 if __name__ == '__main__':
 
     subreddits = screen_threads(data_path, starting_year, starting_month, ending_year, ending_month)
-    print('In this period, we have found {} subreddits'.format(len(list(subreddits.keys()))))
+    print('In this period, we have found {} subreddits in total'.format(len(list(subreddits.keys()))))
 
     names = random_subs(subreddits, min_threads, nb_of_subr)
     print('We have selected the following {} subreddits matching your criteria: {}'.format(len(names),names))
 
-    similarities(names, home_path)
+    for clashing_element in clashing_pairs:
+        group_similarity(clashing_element, names)
+
+    reco, random, similar = similarities(names, home_path)
+    print('Fraction of subreddit names recognized by the word embeddings model: {}'.format(reco))
+    print('Number of random pairs found: {}'.format(random))
+    print('Number of similar pairs found: {}'.format(similar))
 
