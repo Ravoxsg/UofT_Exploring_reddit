@@ -22,12 +22,12 @@ from nlp_utils import preproc
 
 data_path = 'E:/bz2_files/' # where are the bz2 files?
 home_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Code/subreddit names/'
-starting_year = 2006
+starting_year = 2016
 starting_month = 1
-ending_year = 2006
-ending_month = 3
-min_threads = 5*(ending_month - starting_month + 1)
-nb_of_subr = 20
+ending_year = 2016
+ending_month = 12
+min_threads = 150*(ending_month - starting_month + 1)
+nb_of_subr = 1000
 random_thres = 0.02 # lower than that means random
 similar_thres = 0.5 # higher than that means similar
 attempts_coeff = 5
@@ -100,13 +100,14 @@ def group_similarity(pair_element, names):
         random = []
 
         for name in names:
-            embedding = preproc(name)
-            if type(embedding) != str:
-                cos = cosine_similarity(ref.reshape((1,300)), embedding.reshape((1,300)))[0][0]
-                if abs(cos) >= similar_thres:
-                    similar.append((name, cos))
-                if abs(cos) <= random_thres:
-                    random.append((name, cos))
+            if name != pair_element:
+                embedding = preproc(name)
+                if type(embedding) != str:
+                    cos = cosine_similarity(ref.reshape((1,300)), embedding.reshape((1,300)))[0][0]
+                    if abs(cos) >= similar_thres:
+                        similar.append((name, cos))
+                    if abs(cos) <= random_thres:
+                        random.append((name, cos))
 
         similar = sorted(similar, key=lambda x: x[1], reverse=True)
         random = sorted(random, key=lambda x: x[1], reverse=True)
