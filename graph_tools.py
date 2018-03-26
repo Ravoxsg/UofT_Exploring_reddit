@@ -26,10 +26,14 @@ class Community():
 				starting_month, 
 				ending_year, 
 				ending_month,
-				subreddit):
+				subreddit,
+				all_threads=None):
 
 
-		self.all_threads=merge_threads(subreddit, starting_year, starting_month, ending_year, ending_month)
+		if all_threads is None:
+			self.all_threads=merge_threads(subreddit, starting_year, starting_month, ending_year, ending_month)
+		else: 
+			self.all_threads=all_threads
 		self.all_user_id_list=[] #record all of the user id names
 		self.user_count=0 #record the user count 
 
@@ -38,7 +42,7 @@ class Community():
 
 		self.thread_count=0 #counter of the number of threads iterated
 
-		self.num_of_threads= 5000 #the number of maximm threads
+		self.num_of_threads= 1000 #the number of maximm threads
 		self.thread_limit=self.num_of_threads #set the limit on the number of threads
 
 
@@ -46,11 +50,13 @@ class Community():
 		self.inter_group_users_name=[]
 		self.inter_group_users_loyalty=[]
 		self.inter_group_users_community=[] #1 for current commmunity, 0 for other community
+		self.users_interaction_status=[]#tracks the interactions status of each user based on their id
 
 		self.get_user_info()
 		self.get_hash_user_id()
 		self.get_connection_weights()
 		self.assign_community_status()
+		self.assign_interaction_status()
 
 	def get_user_info(self,verbose=True):
 		for subthread in self.all_threads: #for each subthread within the commumity 
@@ -72,7 +78,8 @@ class Community():
 					self.all_user_id_list.append(author)#add user to list
 					self.user_info[author]={} #create a key for the author in the dictionary
 					self.user_info[author]["user_connections"]={} #add user connections
-					self.user_infor[author]['community']=1
+					self.user_info[author]['community']=1
+					self.user_info[author]['interaction_status']=0
 					self.user_count+= 1 #count the author as a apart of the new user count ()
 						
 
@@ -112,7 +119,8 @@ class Community():
 							#establish datastructure for user
 							self.user_info[id_commenter]={} 
 							self.user_info[id_commenter]["user_connections"]={}
-							self.user_infor[author]['community']=1
+							self.user_info[id_commenter]['community']=1
+							self.user_info[id_commenter]['interaction_status']=0
 							self.user_count+= 1 #count the user
 
 
@@ -151,11 +159,14 @@ class Community():
 
 	def assign_community_status(self):
 
-		self.users_community=[]
+		self.users_community_status=[]
 		for user_name_i in list(self.user_info.keys()):
-			self.users_community.append(1)
+			self.users_community_status.append(self.user_info[user_name_i]["community"])
 			
-
+	def assign_interaction_status(self):
+		self.users_interaction_status=[]
+		for user_name_i in list(self.user_info.keys()):
+			self.users_interaction_status.append(self.user_info[user_name_i]["interaction_status"])
 
 	def connection_attribute_collection(self,connections_list, attr_index): #collects all of the attributes
 		attr_list= [single_connection[attr_index] for single_connection in connections_list]
@@ -252,9 +263,10 @@ class Social_Graph(Community):
 				starting_month= 1, 
 				ending_year= 2016, 
 				ending_month= 3,
-				subreddit="kitesurfing"):
+				subreddit="kitesurfing",
+				all_threads=None):
 		
-		super().__init__(starting_year,starting_month,ending_year, ending_month,subreddit)
+		super().__init__(starting_year,starting_month,ending_year, ending_month,subreddit,all_threads)
 
 		self.Generate_Graph() #create social network
 
@@ -283,9 +295,9 @@ class Social_Graph(Community):
 		if not update: 
 			generate=True
 
-		if generate:
+		if generate: #default graph, do not update
 			self.social_network=Graph(directed=False)
-			print("Adding Edges...")
+			self.social_network.add_vertices(self.user_count)
 			self.social_network.add_edges(self.id_pairs)
 
 
@@ -301,8 +313,12 @@ class Social_Graph(Community):
 			#get the 
 		#social_network.vs["label"]=social_network.vs["name"]
 
+		
 
-		self.social_network.vs["community"]=self.users_communitys
+		self.social_network.vs["interaction_status"]=self.users_interaction_status
+
+
+		self.social_network.vs["community"]=self.users_community_status
 
 	#take out all the unconnected nodes
 
@@ -318,17 +334,29 @@ class Social_Graph(Community):
 				delete_vid_list.append(vid)
 		self.social_network.delete_vertices(delete_vid_list)
 
-		self.user_count-= len(delete_vid_list)
-
 
 
 	def print_graph(self):
+		self.trim_unconnected_nodes()
 		print("Printing graph")
 		visual_style = {}
-		visual_style["vertex_size"] = 2
-		#visual_style["vertex_color"] = [color_dict[gender] for gender in g.vs["gender"]]
-		#visual_style["vertex_label"] = social_network.vs["name"]
-		visual_style["edge_width"] = self.social_network.es["weight"]
+		visual_style["vertex_size"] = 5
+
+		vertex_color=[]
+		
+		for i in range(len(self.social_network.vs["community"])):
+			if self.social_network.vs["community"][i]==1:
+				vertex_color.append('red')
+			if self.social_network.vs["community"][i]==2:
+				vertex_color.append('blue')
+
+
+			if self.social_network.vs['interaction_status'][i]==1:
+				vertex_color[i]='green'
+
+		visual_style["vertex_color"] = vertex_color
+		#visual_style["vertex_label"] = self.social_network.vs["name"]
+		#visual_style["edge_width"] = self.social_network.es["weight"]
 		visual_style["layout"]=self.social_network.layout("kk")
 		plot(self.social_network, **visual_style)
 
