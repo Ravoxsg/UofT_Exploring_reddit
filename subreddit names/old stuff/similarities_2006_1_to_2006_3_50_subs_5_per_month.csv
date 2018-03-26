@@ -1,0 +1,14 @@
+subreddit,subreddit
+ja
+,reddit.com,0.13376239
+,de,0.26678646
+,nsfw,Subreddit name not recognized by the word2vec model
+reddit.com
+,ja,0.13376239
+,de,0.00987314
+,nsfw,Subreddit name not recognized by the word2vec model
+de
+,ja,0.26678646
+,reddit.com,0.00987314
+,nsfw,Subreddit name not recognized by the word2vec model
+nsfw
