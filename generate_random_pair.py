@@ -16,6 +16,7 @@ import gensim
 from sklearn.metrics.pairwise import cosine_similarity
 import re
 import nltk
+import operator
 
 from nlp_utils import preproc
 
@@ -27,15 +28,15 @@ starting_month = 1
 ending_year = 2016
 ending_month = 12
 min_threads = 150*(ending_month - starting_month + 1)
-nb_of_subr = 1000
+nb_of_subr = 2000
 random_thres = 0.02 # lower than that means random
 similar_thres = 0.5 # higher than that means similar
 attempts_coeff = 5
 clashing_pairs = ["prolife","prochoice","The_Donald","esist","Feminism","TheRedPill","climatechange","climateskeptics"]
-
+#clashing_pairs = ["reddit.com","nsfw"]
 
 # grab all subreddits in the given period
-def screen_threads(data_path, starting_year, starting_month, ending_year, ending_month):
+def screen_threads(data_path):
 
     os.chdir(data_path)
 
@@ -63,6 +64,23 @@ def screen_threads(data_path, starting_year, starting_month, ending_year, ending
                             continue
     return subreddits
 
+# stores the size (in terms of number of threads) of each subreddit
+def sizes(subreddits):
+
+    os.chdir(home_path)
+
+    sorted_subs = sorted(subreddits.items(), key=operator.itemgetter(1), reverse=True)
+    n = 0
+
+    with open('subreddits_sizes_{}_{}_to_{}_{}_{}_per_month.csv'.format(starting_year, starting_month, ending_year, ending_month, int(min_threads/(ending_month-starting_month+1))), 'w') as file:
+        for key, value in sorted_subs:
+            file.write(key+','+str(value)+'\n')
+            if value >= min_threads:
+                n += 1
+
+    print('We have finished writing the subreddits size')
+    print('There are a total of {} subreddits matching your criteria'.format(n))
+
 # randomly select distinct subreddits that have enough threads
 def random_subs(subreddits, min_threads, nb_of_subr):
 
@@ -89,7 +107,7 @@ def random_subs(subreddits, min_threads, nb_of_subr):
     return names
 
 # find similar and random subreddits associated to a given subreddit (member of a clashing pair for instance)
-def group_similarity(pair_element, names):
+def group_similarity(subreddits, pair_element, names):
 
     os.chdir(home_path+"clashing_pairs_specific/")
     ref = preproc(pair_element)
@@ -113,12 +131,13 @@ def group_similarity(pair_element, names):
         random = sorted(random, key=lambda x: x[1], reverse=True)
         
         with open('{}_similarities.csv'.format(pair_element), 'w') as file:
+            file.write(pair_element+','+str(subreddits[pair_element])+'\n')
             file.write('similar'+'\n')
             for i in range(len(similar)):
-                file.write(str(similar[i][0])+','+str(similar[i][1])+'\n')
+                file.write(str(similar[i][0])+','+str(similar[i][1])+','+str(subreddits[similar[i][0]])+'\n')
             file.write('random'+'\n')
             for i in range(len(random)):
-                file.write(str(random[i][0])+','+str(random[i][1])+'\n')
+                file.write(str(random[i][0])+','+str(random[i][1])+','+str(subreddits[random[i][0]])+'\n')
         print("We finished finding subreddits associated with: {}".format(pair_element))
 
     else:
@@ -193,14 +212,16 @@ def similarities(names, home_path):
 
 if __name__ == '__main__':
 
-    subreddits = screen_threads(data_path, starting_year, starting_month, ending_year, ending_month)
+    subreddits = screen_threads(data_path)
     print('In this period, we have found {} subreddits in total'.format(len(list(subreddits.keys()))))
+
+    sizes(subreddits)
 
     names = random_subs(subreddits, min_threads, nb_of_subr)
     print('We have selected the following {} subreddits matching your criteria: {}'.format(len(names),names))
 
     for clashing_element in clashing_pairs:
-        group_similarity(clashing_element, names)
+        group_similarity(subreddits, clashing_element, names)
 
     reco, random, similar = similarities(names, home_path)
     print('Fraction of subreddit names recognized by the word embeddings model: {}'.format(reco))
