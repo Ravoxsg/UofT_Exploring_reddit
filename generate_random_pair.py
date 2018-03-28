@@ -28,11 +28,11 @@ starting_month = 1
 ending_year = 2016
 ending_month = 12
 min_threads = 150*(ending_month - starting_month + 1)
-nb_of_subr = 2000
+nb_of_subr = 2500
 random_thres = 0.02 # lower than that means random
 similar_thres = 0.5 # higher than that means similar
 attempts_coeff = 5
-clashing_pairs = ["prolife","prochoice","The_Donald","esist","Feminism","TheRedPill","climatechange","climateskeptics"]
+clashing_pairs = ["prolife","prochoice","The_Donald","HillaryForAmerica","Feminism","TheRedPill","climatechange","climateskeptics"]
 #clashing_pairs = ["reddit.com","nsfw"]
 
 # grab all subreddits in the given period
@@ -131,13 +131,17 @@ def group_similarity(subreddits, pair_element, names):
         random = sorted(random, key=lambda x: x[1], reverse=True)
         
         with open('{}_similarities.csv'.format(pair_element), 'w') as file:
-            file.write(pair_element+','+str(subreddits[pair_element])+'\n')
-            file.write('similar'+'\n')
-            for i in range(len(similar)):
-                file.write(str(similar[i][0])+','+str(similar[i][1])+','+str(subreddits[similar[i][0]])+'\n')
-            file.write('random'+'\n')
-            for i in range(len(random)):
-                file.write(str(random[i][0])+','+str(random[i][1])+','+str(subreddits[random[i][0]])+'\n')
+            try:
+                file.write(pair_element+','+str(subreddits[pair_element])+'\n')
+                file.write('similar'+'\n')
+                for i in range(len(similar)):
+                    file.write(str(similar[i][0])+','+str(similar[i][1])+','+str(subreddits[similar[i][0]])+'\n')
+                file.write('random'+'\n')
+                for i in range(len(random)):
+                    file.write(str(random[i][0])+','+str(random[i][1])+','+str(subreddits[random[i][0]])+'\n')
+            except KeyError:
+                return "Sorry, one of the subreddits is unknown to us"
+
         print("We finished finding subreddits associated with: {}".format(pair_element))
 
     else:
