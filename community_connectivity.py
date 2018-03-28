@@ -1,17 +1,11 @@
 from graph_tools import *
 import os
-import pdb
-
+import pdb, traceback, sys
 def find_common_elements(list1,list2):
 	return list(set(list1).intersection(list2))
 
 def user_community_assign(list_a,list_b):
 	return list(map(lambda x,y:int(x>y), list_a, list_b))
-
-starting_year=2016
-starting_month=1
-ending_year=2016
-ending_month=3
 
 
 main_dir=os.getcwd()
@@ -20,10 +14,10 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 						group_type='conflict',
 						save_results=True,
 						year_interval=[2016,2016],
-						month_interval=[1,9],
+						month_interval=[1,6],
 						print_community_graphs=False,
 						print_merged_community=False,
-						thread_idx=[0,100000]):
+						thread_idx=[0,10]):
 
 	#make subreddit one the higher order
 	subreddit_1,subreddit_2=sorted([subreddit_1,subreddit_2])
@@ -224,7 +218,7 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 	max_path_length=3
 
 	inter_neighbor_degree['group_1']=group_1.get_inter_neighbor_degree(group_1.inter_group_users_id,max_path_length,True)
-	inter_neighbor_degree['group_2']=group_2.get_inter_neighbor_degree(group_1.inter_group_users_id,max_path_length,True)
+	inter_neighbor_degree['group_2']=group_2.get_inter_neighbor_degree(group_2.inter_group_users_id,max_path_length,True)
 
 
 	interaction_info_output[group_type][subreddit_1][subreddit_2]["inter_neighbor_degree"]=inter_neighbor_degree
@@ -263,11 +257,39 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 
 import os
 
-#os.chdir('community_outputs')
-os.chdir('community_outputs')
-print(os.path.isfile("bruh"))
-compare_communities()
 
+
+
+with open("pairs_index.pickle",'rb') as fp: 
+	pairs_index=pickle.load(fp)
+
+
+group_type_list=list(pairs_index.keys())
+
+for group_type in group_type_list: 
+	pair_list=pairs_index[group_type]
+	print(group_type)
+
+	for pair in pair_list:
+
+		print("Subreddit 1: ", pair[0], "Subreddit 2: ", pair[1])
+
+		try:
+			compare_communities(subreddit_1=pair[0],subreddit_2=pair[1],
+							group_type=group_type,
+							save_results=True,
+							year_interval=[2016,2016],
+							month_interval=[1,4],
+							print_community_graphs=False,
+							print_merged_community=False,
+							thread_idx=[0,1000])
+		except : 
+
+			
+			type, value, tb = sys.exc_info()
+			traceback.print_exc()
+			pdb.post_mortem(tb)
+			
 
 
 

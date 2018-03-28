@@ -42,7 +42,7 @@ class Community():
 
 		self.thread_count=0 #counter of the number of threads iterated
 
-		self.num_of_threads= 1000000000 #the number of maximm threads
+		self.num_of_threads= len(self.all_threads) #the number of maximm threads
 		self.thread_limit=self.num_of_threads #set the limit on the number of threads
 
 
@@ -52,13 +52,20 @@ class Community():
 		self.inter_group_users_community=[] #1 for current commmunity, 0 for other community
 		self.users_interaction_status=[]#tracks the interactions status of each user based on their id
 
+
+		print(subreddit)
 		self.get_user_info()
 		self.get_hash_user_id()
+		print("Number of Users: ",self.user_count)
+		print(subreddit)
 		self.get_connection_weights()
 		self.assign_community_status()
 		self.assign_interaction_status()
 
 	def get_user_info(self,verbose=True):
+
+		print("getting user info")
+
 		for subthread in self.all_threads: #for each subthread within the commumity 
 			if  self.thread_count> self.thread_limit: #if thread_count is less than the thread_limit, than terminate the loop 
 				break
@@ -66,8 +73,8 @@ class Community():
 			else: #if thread count is less than limit continue
 				
 				self.thread_count+=1 #count the thread by 1
-				if self.thread_count%1000==0 and verbose: #print the progress in threads iterated per community
-					print(self.thread_count," out of ",self.num_of_threads)
+				if self.thread_count%100==0 and verbose: #print the progress in threads iterated per community
+					print(self.thread_count," threads processed out of ",self.num_of_threads)
 
 				commenters_ids=subthread["commenters_ids"] #get all of the users who comment in the thread
 				
@@ -206,7 +213,7 @@ class Community():
 
 		for user_name_i in list(self.user_info.keys()):
 			cnt+=1
-			if cnt%1000==0: 
+			if cnt%500==0: 
 				print(cnt," out of ", self.user_count)
 			user_i_connections=self.user_info[user_name_i]["user_connections"] #get the connections of user i
 
@@ -253,7 +260,7 @@ class Community():
 					self.pair_weight.append(weight_score)
 
 				#import pdb; pdb.set_trace()
-
+		print("Finished Configuring Weights")
 
 ######################	CREATE THE FLIGHT NETWORK############################
 
@@ -292,7 +299,7 @@ class Social_Graph(Community):
 		return loyalty_score_list
 
 	def Generate_Graph(self, update= False, generate=False):
-
+		print("Creating Graph")
 		if not update: 
 			generate=True
 
@@ -321,6 +328,7 @@ class Social_Graph(Community):
 
 		self.social_network.vs["community"]=self.users_community_status
 
+		print("Finished Creating Graph")
 	#take out all the unconnected nodes
 
 	def get_nodes_degree(self,input_node_id_list): #get the degree of each of the nodes
