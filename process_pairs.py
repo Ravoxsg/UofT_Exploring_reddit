@@ -54,7 +54,7 @@ def pairs_index():
                     control_random_pairs.append([non_clashing_elements[i], non_clashing_elements[j]])
 
     all_pairs = {"conflict": clashing_pairs, "similar": similar_pairs,
-    "random": random_pairs, "control_similar": control_similar_pairs, "control_random": control_similar_pairs}
+    "random": random_pairs, "control_similar": control_similar_pairs, "control_random": control_random_pairs}
 
     print(all_pairs)
 

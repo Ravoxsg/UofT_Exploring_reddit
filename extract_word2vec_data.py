@@ -20,8 +20,9 @@ output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-
 starting_year = 2016
 starting_month = 1
 ending_year = 2016
-ending_month = 3
+ending_month = 12
 min_common_posts = 10
+sub_thres = 200
 
 
 # create one dictionary per thread that appeared in that period in this suberredit
@@ -53,12 +54,12 @@ def authors_per_sub(data_path, starting_year, starting_month, ending_year, endin
                             times.append(time2-time1)
                             if (thread_dico != None) & (thread_dico != {}):
                                 if thread_dico["author"] in authors.keys():
-                                	if thread_dico["subreddit"] in authors[thread_dico["author"]].keys():
-                                		authors[thread_dico["author"]][thread_dico["subreddit"]] += 1
-                                	else:
-                                		authors[thread_dico["author"]][thread_dico["subreddit"]] = 1
+                                    if thread_dico["subreddit"] in authors[thread_dico["author"]].keys():
+                                        authors[thread_dico["author"]][thread_dico["subreddit"]] += 1
+                                    else:
+                                        authors[thread_dico["author"]][thread_dico["subreddit"]] = 1
                                 else:
-                                	authors[thread_dico["author"]] = {thread_dico["subreddit"]: 1}
+                                    authors[thread_dico["author"]] = {thread_dico["subreddit"]: 1}
                         except KeyError:
                             failed_conversions += 1
                             continue
@@ -66,37 +67,47 @@ def authors_per_sub(data_path, starting_year, starting_month, ending_year, endin
 
 def authors_in_common(authors, min_common_posts):
 
-	subreddits = {}
+    subreddits = {}
+    i = 0
+    times = []
 
-	for author in tqdm(authors.keys()):
-		for subreddit1 in authors[author].keys():
-			for subreddit2 in authors[author].keys():
-				if subreddit1 != subreddit2:
-					if (authors[author][subreddit1] >= min_common_posts) and (authors[author][subreddit2] >= min_common_posts):
-						if subreddit1 in subreddits.keys():
-							if subreddit2 in subreddits[subreddit1].keys():
-								subreddits[subreddit1][subreddit2] += 1
-							else:
-								subreddits[subreddit1][subreddit2] = 1
-						else:
-							subreddits[subreddit1] = {subreddit2: 1}
+    for author in tqdm(authors):
+        if len(authors[author].keys()) <= sub_thres:
+            t1 = time.time()
+            for subreddit1 in authors[author]:
+                for subreddit2 in authors[author]:
+                    if subreddit1 != subreddit2:
+                        if (authors[author][subreddit1] >= min_common_posts) and (authors[author][subreddit2] >= min_common_posts):
+                            if subreddit1 in subreddits.keys():
+                                if subreddit2 in subreddits[subreddit1].keys():
+                                    subreddits[subreddit1][subreddit2] += 1
+                                else:
+                                    subreddits[subreddit1][subreddit2] = 1
+                            else:
+                                subreddits[subreddit1] = {subreddit2: 1}
+            t2 = time.time()
+            i += 1
+            if (i % 10000) == 0:
+                print(i)
+                print(t2-t1)
+            times.append(t2-t1)
 
-	return subreddits
+    return subreddits, np.mean(np.array(times))
 
 
 if __name__ == '__main__':
 
+    authors, times, conv_ratio = authors_per_sub(data_path, starting_year, starting_month, ending_year, ending_month)
+    #print(authors)
 
-	authors, times, conv_ratio = authors_per_sub(data_path, starting_year, starting_month, ending_year, ending_month)
-	#print(authors)
+    subreddits, t = authors_in_common(authors, min_common_posts)
+    print('average time per author: {}'.format(t))
+    #print(subreddits)
 
-	subreddits = authors_in_common(authors, min_common_posts)
-	#print(subreddits)
+    os.chdir(output_path)
 
-	os.chdir(output_path)
-
-	with open('common_authors_{}_{}_to_{}_{}.csv'.format(starting_year, starting_month, ending_year, ending_month), 'w') as file:
-		file.write("t1_subreddit"+','+"t2_subreddit"+','+"NumOverlaps"+'\n')
-		for sub1 in subreddits.keys():
-			for sub2 in subreddits[sub1].keys():
-				file.write(sub1+','+sub2+','+str(subreddits[sub1][sub2])+'\n')
+    with open('common_authors_{}_{}_to_{}_{}.csv'.format(starting_year, starting_month, ending_year, ending_month), 'w') as file:
+        file.write("t1_subreddit"+','+"t2_subreddit"+','+"NumOverlaps"+'\n')
+        for sub1 in subreddits.keys():
+            for sub2 in subreddits[sub1].keys():
+                file.write(sub1+','+sub2+','+str(subreddits[sub1][sub2])+'\n')
