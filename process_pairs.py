@@ -1,7 +1,6 @@
 # Utility functions for subreddit names
 
 import numpy as np 
-import f
 import csv
 import ast 
 from tqdm import tqdm
@@ -29,7 +28,7 @@ def pairs_index():
     ["Feminism", "TheRedPill"], ["climatechange","climateskeptics"]]
 
     non_clashing_elements = ["prohealth", "2016_elections", "Anarchism", "PurplePillDebate", "climate", "fastfood",
-    "FoodFans","Calligraphy","bookbinding"]
+    "Calligraphy","bookbinding"]
 
     similar_pairs = [["prolife","prohealth"], ["prolife","prohealth"],
     ["The_Donald", "2016_elections"], ["HillaryForAmerica", "2016_elections"],
@@ -44,7 +43,7 @@ def pairs_index():
             j = np.random.randint(n)
         random_pairs.append([clashing_elements[i], similar_pairs[j][1]])
 
-    control_similar_pairs = [["fastfood","FoodFans"], ["Calligraphy", "bookbinding"]]
+    control_similar_pairs = [["Calligraphy", "bookbinding"]]
 
     control_random_pairs = []
     m = len(non_clashing_elements)

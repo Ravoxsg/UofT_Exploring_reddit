@@ -1,7 +1,6 @@
 # Utility functions for threads
 
 import numpy as np 
-import f
 import csv
 import ast 
 from tqdm import tqdm
