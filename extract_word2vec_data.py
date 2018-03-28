@@ -16,7 +16,7 @@ import pickle
 
 # PARAMETERS
 data_path = 'E:/bz2_files/' # where are the bz2 files?
-output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Exploring_Reddit' # where do you want to save the threads data?
+output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Exploring_Reddit/community2vec embeddings/' # where do you want to save the threads data?
 starting_year = 2006
 starting_month = 1
 ending_year = 2006
