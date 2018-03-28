@@ -1,11 +1,21 @@
 Clashing pairs:
 prolife // prochoice
-The_Donald // esist
+The_Donald // HillaryForAmerica
 Feminism // TheRedPill 
 climatechange // climateskeptics
 
-Similar pairs (Random):
-watersports // kitesurfing
-Calligraphy // bookbinding
-
 Similar pairs with at least one clashing:
+prolife // prohealth
+prochoice // prohealth
+The_Donald // 2016_elections
+HillaryForAmerica // 2016_elections
+TheRedPill // PurplePillDebate
+Feminism // Anarchism
+climatechange // climate
+climateskeptics // climate
+
+Similar pairs (Random):
+Calligraphy // bookbinding
+fastfood // FoodFans
+
+
