@@ -33,7 +33,7 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 	#combine both threads
 
 	all_threads_1=merge_threads(subreddit_1, starting_year, starting_month, ending_year, ending_month)
-	#all_threads_1=all_threads_1[thread_idx[0]:thread_idx[1]]
+	all_threads_1=all_threads_1[thread_idx[0]:thread_idx[1]]
 
 	group_1= Social_Graph(subreddit=subreddit_1,
 	 						starting_year=starting_year, 
@@ -44,7 +44,7 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 
 
 	all_threads_2=merge_threads(subreddit_2, starting_year, starting_month, ending_year, ending_month)
-	#all_threads_2=all_threads_2[thread_idx[0]:thread_idx[1]]
+	all_threads_2=all_threads_2[thread_idx[0]:thread_idx[1]]
 
 	group_2= Social_Graph(subreddit=subreddit_2,
 	 						starting_year=starting_year, 
@@ -100,16 +100,12 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 	
 
 
-	try:
-		for user_name in group_1.user_name_list:
-			group_merge.user_info[user_name]["community"]=1
-			print(user_name)
+	for user_name in group_1.user_name_list:
+		group_merge.user_info[user_name]["community"]=1
 
-		for user_name in group_2.user_name_list:
-			group_merge.user_info[user_name]["community"]=2
-			print(user_name)
-	except KeyError: 
-		pdb.set_trace()
+	for user_name in group_2.user_name_list:
+		group_merge.user_info[user_name]["community"]=2
+
 
 	for user_name in group_1.inter_group_users_name:
 		group_merge.user_info[user_name]["interaction_status"]=1
@@ -164,6 +160,8 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 			interaction_info_output['random']={}
 			interaction_info_output['conflict']={}
 			interaction_info_output['similar']={}
+			interaction_info_output['control_similar']={}
+			interaction_info_output['control_random']={}
 	else: 
 
 		#if doesnt exist, create it
@@ -177,7 +175,7 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 
 	pair_dict_keys=list(interaction_info_output[group_type].keys())
 
-	#remember (subreddit_1,subreddit_2=sorted([subreddit_1,subreddit_2]))
+	#remember (subreddit_1,subreddit_2=sorted([subreddicot_1,subreddit_2]))
 	#create a new instance of the saved interaction
 
 	#NOTICE: MAYBE WE DONT NEED THIS DUE TO ALPHABETICAL ORDERING
@@ -225,8 +223,8 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 	inter_neighbor_degree={}
 	max_path_length=3
 
-	inter_neighbor_degree['group_1']=group_1.get_inter_neighbor_degree(max_path_length,True)
-	inter_neighbor_degree['group_2']=group_2.get_inter_neighbor_degree(max_path_length,True)
+	inter_neighbor_degree['group_1']=group_1.get_inter_neighbor_degree(group_1.inter_group_users_id,max_path_length,True)
+	inter_neighbor_degree['group_2']=group_2.get_inter_neighbor_degree(group_1.inter_group_users_id,max_path_length,True)
 
 
 	interaction_info_output[group_type][subreddit_1][subreddit_2]["inter_neighbor_degree"]=inter_neighbor_degree
@@ -244,6 +242,14 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 	interaction_info_output[group_type][subreddit_1][subreddit_2]["user_inter_neighbor_degree"]=user_inter_neighbor_degree
 
 
+	with open(file_name,'wb') as fp: 
+		pickle.dump(interaction_info_output,fp)
+
+
+	#pdb.set_trace()
+
+	print("Saved Individual Community Data")
+	print('Saving Interaction Data')
 
 
 	#BORING PRINTING STUFF
