@@ -16,12 +16,12 @@ import pickle
 
 # PARAMETERS
 data_path = 'E:/bz2_files/' # where are the bz2 files?
-output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Code/threads' # where do you want to save the threads data?
-starting_year = 2016
+output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Exploring_Reddit' # where do you want to save the threads data?
+starting_year = 2006
 starting_month = 1
-ending_year = 2016
-ending_month = 12
-min_common_posts = 10
+ending_year = 2006
+ending_month = 3
+min_common_posts = 1
 
 
 # create one dictionary per thread that appeared in that period in this suberredit
@@ -30,6 +30,7 @@ def authors_per_sub(data_path, starting_year, starting_month, ending_year, endin
     authors = {}
     times = []
     lines = 0
+    failed_conversions = 0
 
     os.chdir(data_path)
 
@@ -95,7 +96,7 @@ if __name__ == '__main__':
 	os.chdir(output_path)
 
 	with open('common_authors_{}_{}_to_{}_{}.csv'.format(starting_year, starting_month, ending_year, ending_month), 'w') as file:
-		file.write("sub1"+','+"sub2"+'\n')
+		file.write("t1_subreddit"+','+"t2_subreddit"+','+"NumOverlaps"+'\n')
 		for sub1 in subreddits.keys():
 			for sub2 in subreddits[sub1].keys():
 				file.write(sub1+','+sub2+','+str(subreddits[sub1][sub2])+'\n')

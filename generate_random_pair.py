@@ -22,7 +22,7 @@ from nlp_utils import preproc
 
 
 data_path = 'E:/bz2_files/' # where are the bz2 files?
-home_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Code/subreddit names/'
+home_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Exploring_Reddit/subreddit names/'
 starting_year = 2016
 starting_month = 1
 ending_year = 2016
