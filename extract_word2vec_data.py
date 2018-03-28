@@ -17,11 +17,11 @@ import pickle
 # PARAMETERS
 data_path = 'E:/bz2_files/' # where are the bz2 files?
 output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/WINTER/3-Topics in CSS/3_Project/Exploring_Reddit/community2vec embeddings/' # where do you want to save the threads data?
-starting_year = 2006
+starting_year = 2016
 starting_month = 1
-ending_year = 2006
+ending_year = 2016
 ending_month = 3
-min_common_posts = 1
+min_common_posts = 10
 
 
 # create one dictionary per thread that appeared in that period in this suberredit
@@ -88,10 +88,10 @@ if __name__ == '__main__':
 
 
 	authors, times, conv_ratio = authors_per_sub(data_path, starting_year, starting_month, ending_year, ending_month)
-	print(authors)
+	#print(authors)
 
 	subreddits = authors_in_common(authors, min_common_posts)
-	print(subreddits)
+	#print(subreddits)
 
 	os.chdir(output_path)
 
