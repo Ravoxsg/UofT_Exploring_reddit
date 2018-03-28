@@ -42,7 +42,7 @@ class Community():
 
 		self.thread_count=0 #counter of the number of threads iterated
 
-		self.num_of_threads= 1000 #the number of maximm threads
+		self.num_of_threads= 1000000000 #the number of maximm threads
 		self.thread_limit=self.num_of_threads #set the limit on the number of threads
 
 
@@ -268,6 +268,7 @@ class Social_Graph(Community):
 		
 		super().__init__(starting_year,starting_month,ending_year, ending_month,subreddit,all_threads)
 
+		self.interlink_score={}
 		self.Generate_Graph() #create social network
 
 
@@ -306,7 +307,7 @@ class Social_Graph(Community):
 
 			self.social_network.es["weight"]= self.pair_weight #add the weights
 
-			self.social_network.vs["degree"]=self.get_nodes_degree()
+			self.social_network.vs["degree"]=self.get_nodes_degree(range(self.user_count))
 
 			self.social_network.vs["loyalty"]=self.Calculate_Loyalty()
 
@@ -322,21 +323,60 @@ class Social_Graph(Community):
 
 	#take out all the unconnected nodes
 
-	def get_nodes_degree(self): #get the degree of each of the nodes
-		return self.social_network.degree(range(self.user_count))
+	def get_nodes_degree(self,input_node_id_list): #get the degree of each of the nodes
+		return self.social_network.degree(input_node_id_list)
 
+	def get_degree(self,input_node_id):
+		return
 	def trim_unconnected_nodes(self): #trims unconnected nodes
 		print("Removing unconnected nodes...")
-		self.social_network_degree=self.get_nodes_degree() #
+		self.social_network_degree=self.get_nodes_degree(range(self.user_count)) #
 		delete_vid_list=[]
 		for vid in range(len(self.social_network_degree)):
 			if self.social_network_degree[vid]==0:
 				delete_vid_list.append(vid)
 		self.social_network.delete_vertices(delete_vid_list)
 
+	
+
+	def get_inter_linkscore(self,
+							input_node_id_list=[],
+							max_degree=10,
+							output_return=False):
+		
+		self.interlink_score={}
+		for deg in range(1,max_degree+1):
+
+			self.interlink_score[deg]=len(self.social_network.neighborhood(vertices=input_node_id_list,order=deg)[0])
+
+		if output_return:
+			return self.interlink_score
 
 
-	def print_graph(self):
+
+	def get_inter_neighbor_degree(self,
+									input_node_id_list=[],
+									max_degree=10,
+									 output_return=False): #get the degree of the connected neibhrours of th
+		self.inter_neighbor_degree={}
+
+		for deg in range(1,max_degree+1):
+			#get neigbhours within specfic path length
+			neighbor_nodes=self.social_network.neighborhood(vertices=input_node_id_list,order=deg)[0]
+			self.inter_neighbor_degree[deg]=self.get_nodes_degree(neighbor_nodes)
+		
+		if output_return:
+			return self.inter_neighbor_degree
+
+
+
+	def update_community(self):
+		self.assign_community_status()
+		self.assign_interaction_status()
+		self.Generate_Graph(update=True)
+
+
+	def print_graph(self, verbose=False):
 		self.trim_unconnected_nodes()
 		print("Printing graph")
 		visual_style = {}
@@ -355,7 +395,9 @@ class Social_Graph(Community):
 				vertex_color[i]='green'
 
 		visual_style["vertex_color"] = vertex_color
-		#visual_style["vertex_label"] = self.social_network.vs["name"]
+		if verbose:
+			visual_style["vertex_label"] = self.social_network.vs["name"]
+
 		#visual_style["edge_width"] = self.social_network.es["weight"]
 		visual_style["layout"]=self.social_network.layout("kk")
 		plot(self.social_network, **visual_style)
