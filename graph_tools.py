@@ -27,13 +27,10 @@ class Community():
 				ending_year, 
 				ending_month,
 				subreddit,
-				all_threads=None):
+				all_threads,
+				user_count_limit):
 
-
-		if all_threads is None:
-			self.all_threads=merge_threads(subreddit, starting_year, starting_month, ending_year, ending_month)
-		else: 
-			self.all_threads=all_threads
+		self.all_threads=all_threads
 		self.all_user_id_list=[] #record all of the user id names
 		self.user_count=0 #record the user count 
 
@@ -44,7 +41,7 @@ class Community():
 
 		self.num_of_threads= len(self.all_threads) #the number of maximm threads
 		self.thread_limit=self.num_of_threads #set the limit on the number of threads
-
+		self.user_count_limit=user_count_limit
 
 		self.inter_group_users_id=[]
 		self.inter_group_users_name=[]
@@ -66,10 +63,17 @@ class Community():
 
 		print("getting user info")
 
-		for subthread in self.all_threads: #for each subthread within the commumity 
-			if  self.thread_count> self.thread_limit: #if thread_count is less than the thread_limit, than terminate the loop 
-				break
+		#reinititialize variables
+		self.thread_count=0
+		self.user_count=0
+		self.user_info={}
+		self.all_user_id_list=[]
 
+		for subthread in self.all_threads: #for each subthread within the commumity 
+
+			if self.user_count>self.user_count_limit: 
+				self.thread_limit=self.thread_count
+				break
 			else: #if thread count is less than limit continue
 				
 				self.thread_count+=1 #count the thread by 1
@@ -271,9 +275,10 @@ class Social_Graph(Community):
 				ending_year= 2016, 
 				ending_month= 3,
 				subreddit="kitesurfing",
-				all_threads=None):
+				all_threads=None, 
+				user_count_limit=1000000):
 		
-		super().__init__(starting_year,starting_month,ending_year, ending_month,subreddit,all_threads)
+		super().__init__(starting_year,starting_month,ending_year, ending_month,subreddit,all_threads,user_count_limit)
 
 		self.interlink_score={}
 		self.Generate_Graph() #create social network
@@ -328,11 +333,26 @@ class Social_Graph(Community):
 
 		self.social_network.vs["community"]=self.users_community_status
 
+		self.k_shell=self.social_network.shell_index(mode=ALL)
+
+		self.social_network.vs["k_shell"]=self.k_shell
+
+
 		print("Finished Creating Graph")
 	#take out all the unconnected nodes
 
 	def get_nodes_degree(self,input_node_id_list): #get the degree of each of the nodes
-		return self.social_network.degree(input_node_id_list)
+		if len(input_node_id_list)>0:
+			return self.social_network.degree(input_node_id_list)
+		else:
+			return []
+
+
+	def get_nodes_k_shell(self,input_node_id_list): #get the degree of each of the nodes
+		if len(input_node_id_list)>0:
+			return [self.k_shell[node_id] for node_id in input_node_id_list]
+		else:
+			return []
 
 	def get_degree(self,input_node_id):
 		return
@@ -353,9 +373,10 @@ class Social_Graph(Community):
 							output_return=False):
 		
 		self.interlink_score={}
-		for deg in range(1,max_degree+1):
+		if len(input_node_id_list)>0:
+			for deg in range(1,max_degree+1):
 
-			self.interlink_score[deg]=len(self.social_network.neighborhood(vertices=input_node_id_list,order=deg)[0])
+				self.interlink_score[deg]=len(self.social_network.neighborhood(vertices=input_node_id_list,order=deg)[0])
 
 		if output_return:
 			return self.interlink_score
@@ -368,13 +389,29 @@ class Social_Graph(Community):
 									 output_return=False): #get the degree of the connected neibhrours of th
 		self.inter_neighbor_degree={}
 
-		for deg in range(1,max_degree+1):
-			#get neigbhours within specfic path length
-			neighbor_nodes=self.social_network.neighborhood(vertices=input_node_id_list,order=deg)[0]
-			self.inter_neighbor_degree[deg]=self.get_nodes_degree(neighbor_nodes)
-		
+		if len(input_node_id_list)>0:
+			for deg in range(1,max_degree+1):
+				#get neigbhours within specfic path length
+				neighbor_nodes=self.social_network.neighborhood(vertices=input_node_id_list,order=deg)[0]
+				self.inter_neighbor_degree[deg]=self.get_nodes_degree(neighbor_nodes)
+			
 		if output_return:
 			return self.inter_neighbor_degree
+
+	def get_inter_neighbor_k_shell(self,
+									input_node_id_list=[],
+									max_degree=10,
+									 output_return=False): #get the degree of the connected neibhrours of th
+		self.inter_neighbor_k_shell={}
+
+		if len(input_node_id_list)>0:
+			for deg in range(1,max_degree+1):
+				#get neigbhours within specfic path length
+				neighbor_nodes=self.social_network.neighborhood(vertices=input_node_id_list,order=deg)[0]
+				self.inter_neighbor_k_shell[deg]=self.get_nodes_k_shell(neighbor_nodes)
+			
+		if output_return:
+			return self.inter_neighbor_k_shell
 
 
 
