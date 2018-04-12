@@ -3,6 +3,7 @@ prolife // prochoice
 The_Donald // HillaryForAmerica
 Feminism // TheRedPill 
 climatechange // climateskeptics
+androiddev // applehelp
 
 Similar pairs with at least one clashing:
 prolife // prohealth
@@ -13,6 +14,11 @@ TheRedPill // PurplePillDebate
 Feminism // Anarchism
 climatechange // climate
 climateskeptics // climate
+hackintosh // ios
+applehelp // hackintosh
+androiddev // hackintosh
+applehelp // ios
+androiddev // ios
 
 Similar pairs (Random):
 Calligraphy // bookbinding

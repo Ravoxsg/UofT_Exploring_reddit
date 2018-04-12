@@ -18,10 +18,10 @@ import pickle
 data_path = 'E:/bz2_files/' # where are the bz2 files?
 output_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/2_WINTER/3-Topics in CSS/3_Project/Exploring_Reddit/threads' # where do you want to save the threads data?
 starting_year = 2016
-starting_month = 1
+starting_month = 11
 ending_year = 2016
-ending_month = 9
-subreddit = "bostonceltics"
+ending_month = 12
+subreddit = "Patriots"
 
 # manual way to convert string into dictionary - useless now
 def string_to_dic(s):
@@ -59,8 +59,10 @@ def initialize_threads(data_path, starting_year, starting_month, ending_year, en
             date = filename[3:-4].split('-')
             year = int(date[0])
             month = int(date[1])
+            print(month)
             # taking files relevant to us
             if ((year >= starting_year) & (year <= ending_year)) & ((month >= starting_month) & (month <= ending_month)):
+                print('got the file')
                 if filename.startswith('RS_'):
                     bz_file = bz2.BZ2File(filename)
                     for line in tqdm(bz_file):
