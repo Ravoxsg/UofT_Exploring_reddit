@@ -83,15 +83,13 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 
 	group_1=get_graph(subreddit_1, starting_year, starting_month, ending_year, ending_month,user_limit)
 
-	all_threads_1=group_1.all_threads[0:group_1.thread_limit]
-
 
 	print("Collecting Threads: ", subreddit_2)
 
 
 	group_2=get_graph(subreddit_2, starting_year, starting_month, ending_year, ending_month,user_limit)
 
-	all_threads_2=group_2.all_threads[0:group_2.thread_limit]
+	
 
 	if group_1.user_count==0 or group_2.user_count==0:
 		return
@@ -131,9 +129,12 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 
 
 	#create the group merge
-	all_threads=all_threads_1+all_threads_2
+	
 
 	if group_merge_bool:
+		all_threads_1=group_1.all_threads[0:group_1.thread_limit]
+		all_threads_2=group_2.all_threads[0:group_2.thread_limit]
+		all_threads=all_threads_1+all_threads_2
 		group_merge=Social_Graph(subreddit=subreddit_1,
 		 						starting_year=starting_year, 
 		 						starting_month= starting_month, 

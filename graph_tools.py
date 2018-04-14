@@ -356,14 +356,16 @@ class Social_Graph(Community):
 
 	def get_degree(self,input_node_id):
 		return
-	def trim_unconnected_nodes(self): #trims unconnected nodes
+	def k_core_subsample(self, subsample_size=100): #trims unconnected nodes
 		print("Removing unconnected nodes...")
-		self.social_network_degree=self.get_nodes_degree(range(self.user_count)) #
-		delete_vid_list=[]
-		for vid in range(len(self.social_network_degree)):
-			if self.social_network_degree[vid]==0:
-				delete_vid_list.append(vid)
-		self.social_network.delete_vertices(delete_vid_list)
+		
+		self.social_network_visual=self.social_network
+		k_shell_values=self.social_network_visual.vs['k_shell']#
+
+		arg_shells_value=list(np.argsort(np.array(k_shell_values)))
+		delete_vid_list= arg_shells_value[:-subsample_size]
+
+		self.social_network_visual.delete_vertices(delete_vid_list)
 
 	
 
@@ -422,30 +424,31 @@ class Social_Graph(Community):
 
 
 	def print_graph(self, verbose=False):
-		self.trim_unconnected_nodes()
+		self.k_core_subsample(subsample_size=200)
 		print("Printing graph")
 		visual_style = {}
 		visual_style["vertex_size"] = 5
 
 		vertex_color=[]
 		
-		for i in range(len(self.social_network.vs["community"])):
-			if self.social_network.vs["community"][i]==1:
+		for i in range(len(self.social_network_visual.vs["community"])):
+			if self.social_network_visual.vs["community"][i]==1:
 				vertex_color.append('red')
-			if self.social_network.vs["community"][i]==2:
+			if self.social_network_visual.vs["community"][i]==2:
 				vertex_color.append('blue')
 
 
-			if self.social_network.vs['interaction_status'][i]==1:
+			if self.social_network_visual.vs['interaction_status'][i]==1:
 				vertex_color[i]='green'
 
 		visual_style["vertex_color"] = vertex_color
 		if verbose:
-			visual_style["vertex_label"] = self.social_network.vs["name"]
+			visual_style["vertex_label"] = self.social_network_visual.vs["name"]
 
 		#visual_style["edge_width"] = self.social_network.es["weight"]
-		visual_style["layout"]=self.social_network.layout("kk")
-		plot(self.social_network, **visual_style)
+		visual_style["layout"]=self.social_network_visual.layout("kk")
+		plot(self.social_network_visual, **visual_style)
+
 
 
 
