@@ -365,9 +365,9 @@ for group_type in group_type_list:
 								save_results=True,
 								year_interval=[2016,2016],
 								month_interval=[1,10],
-								print_community_graphs=True,
+								print_community_graphs=False,
 								print_merged_community=False,
-								user_limit=10,
+								user_limit=1000,
 								subsample_size=400,
 								save_data=True,
 								group_merge_bool=False)
