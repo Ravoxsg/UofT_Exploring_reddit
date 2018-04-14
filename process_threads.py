@@ -10,6 +10,7 @@ import gc
 import bz2
 import json
 import pickle
+import os
 from sklearn.metrics.pairwise import cosine_similarity as cos
 
 import pdb
@@ -18,7 +19,7 @@ import pdb
 # merge threads from the same subreddit over different months
 def merge_threads(subreddit, starting_year, starting_month, ending_year, ending_month):
    
-    os.chdir('/Users/vivonasg/Documents/MSCAC_FALL_2017/SEMESTER_2/CSC2552/Exploring_Reddit')
+    os.chdir('C:/Users/mathi/Documents/ETUDES/4-University of Toronto/2_WINTER/3-Topics in CSS/3_Project/Exploring_Reddit')
     os.chdir('threads')
     os.chdir(subreddit)
 

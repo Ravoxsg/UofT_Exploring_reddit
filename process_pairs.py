@@ -85,17 +85,20 @@ def sport_pairs():
         for team_b in list(team_cities.keys()):
             if team_a != team_b:
                 if team_cities[team_a] == team_cities[team_b]:
-                    similar_pairs.append([team_a, team_b])
+                    if not([team_b, team_a] in similar_pairs):
+                        similar_pairs.append([team_a, team_b])
                 elif team_sports[team_a] == team_sports[team_b]:
-                    clashing_pairs.append([team_a, team_b])
+                    if not([team_b, team_a] in clashing_pairs):
+                        clashing_pairs.append([team_a, team_b])
                 else:
-                    random_pairs.append([team_a, team_b])
+                    if not([team_b, team_a] in random_pairs):
+                        random_pairs.append([team_a, team_b])
 
     all_pairs = {"conflict": clashing_pairs, "similar": similar_pairs, "random": random_pairs}
 
-    print(clashing_pairs)
-    print(similar_pairs)
-    print(random_pairs)
+    print('Number of clashing pairs: {}'.format(len(clashing_pairs)))
+    print('Number of similar pairs: {}'.format(len(similar_pairs)))
+    print('Number of random pairs: {}'.format(len(random_pairs)))
 
     with open('sport_pairs.pickle', 'wb') as handle:
         pickle.dump(all_pairs, handle)
