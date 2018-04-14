@@ -18,6 +18,7 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 						print_community_graphs=False,
 						print_merged_community=False,
 						user_limit=1000,
+						subsample_size=100,
 						save_data=True):
 
 	#make subreddit one the higher order
@@ -39,8 +40,6 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 	 						 all_threads=all_threads_1,
 	 						 user_count_limit=user_limit)
 
-
-	pdb.set_trace()
 
 
 	all_threads_1=all_threads_1[0:group_1.thread_limit]
@@ -293,20 +292,24 @@ import os
 
 
 
-with open("pairs_index.pickle",'rb') as fp: 
+with open("sport_pairs.pickle",'rb') as fp: 
 	pairs_index=pickle.load(fp)
 
+'''
 pairs_index={'random': [['prolife', 'PurplePillDebate'], ['prochoice', 'climate'], ['The_Donald', 'prohealth'], ['HillaryForAmerica', 'Anarchism'], ['Feminism', 'prohealth'], ['TheRedPill', 'climate'], ['climatechange', '2016_elections'], ['climateskeptics', '2016_elections']], 
 			'control_random': [['Calligraphy', 'bookbinding']], 'control_similar': [['Calligraphy', 'bookbinding']], 
-			'similar': [['prolife', 'prohealth'], ['prolife', 'prohealth'], ['The_Donald', '2016_elections'], ['HillaryForAmerica', '2016_elections'], ['Feminism', 'Anarchism'], ['TheRedPill', 'PurplePillDebate'], ['climatechange', 'climate'], ['climateskeptics', 'climate']],
-			'conflict': [['prolife', 'prochoice'], ['The_Donald', 'HillaryForAmerica'], ['Feminism', 'TheRedPill'], ['climatechange', 'climateskeptics']]}
+			'similar': [['prolife', 'prohealth'], ['prolife', 'prohealth'], ['The_Donald', '2016_elections'], ['HillaryForAmerica', '2016_elections'], ['Feminism', 'Anarchism'], ['TheRedPill', 'PurplePillDebate'], ['climatechange', 'climate'], ['climateskeptics', 'climate'], ['Feminism','prochoice']],
+			'conflict': [['prolife', 'prochoice'], ['The_Donald', 'HillaryForAmerica'], ['Feminism', 'TheRedPill'], ['climatechange', 'climateskeptics'], ['Feminism','prolife']]}
 
+pairs_index={'similar': [['prochoice', 'Calligraphy']]}
+'''
+pdb.set_trace()
 
 
 group_type_list=list(pairs_index.keys())
 
 
-avoided_subreddits=["The_Donald","HillaryForAmerica"]
+avoided_subreddits=["The_Donald"]
 
 
 for group_type in group_type_list: 
@@ -318,15 +321,18 @@ for group_type in group_type_list:
 		print("Subreddit 1: ", pair[0], "Subreddit 2: ", pair[1])
 
 		if pair[0] not in avoided_subreddits and pair[1] not in avoided_subreddits:
+		
+
 			try:
 				compare_communities(subreddit_1=pair[0],subreddit_2=pair[1],
 								group_type=group_type,
 								save_results=True,
 								year_interval=[2016,2016],
-								month_interval=[1,7],
-								print_community_graphs=False,
-								print_merged_community=False,
-								user_limit=500,
+								month_interval=[1,10],
+								print_community_graphs=True,
+								print_merged_community=True,
+								user_limit=2000,
+								subsample_size=400,
 								save_data=True)
 			except : 
 
