@@ -1,6 +1,7 @@
 from graph_tools import *
 import os
 import pdb, traceback, sys
+import re
 def find_common_elements(list1,list2):
 	return list(set(list1).intersection(list2))
 
@@ -9,6 +10,54 @@ def user_community_assign(list_a,list_b):
 
 
 main_dir=os.getcwd()
+
+
+def get_graph(subreddit_name,starting_year, starting_month, ending_year,ending_month,user_limit, all_threads=None):
+	
+	os.chdir(main_dir)
+	output_folder='community_graphs/'
+	
+	file_name=output_folder+subreddit_name+"_"+str(user_limit)+"_graph.pickle"
+	
+	user_limit_file=0
+	if os.path.isfile(file_name):
+		
+		user_limit_file=int(re.search(r'\d+', file_name).group())
+
+	
+
+	if os.path.isfile(file_name) and user_limit_file>=user_limit:
+		#load file
+		with open(file_name,'rb') as f: 
+			group=pickle.load(f)
+
+		
+
+		return group
+
+	else:
+		if all_threads == None:
+			all_threads=merge_threads(subreddit_name, starting_year, starting_month, ending_year, ending_month)
+
+		group= Social_Graph(subreddit=subreddit_name,
+		 						starting_year=starting_year, 
+		 						starting_month= starting_month, 
+		 						ending_year= ending_year,
+		 						 ending_month= ending_month,
+		 						 all_threads=all_threads,
+		 						 user_count_limit=user_limit)
+		#save file
+		os.chdir(main_dir)
+		with open(file_name,'wb') as f:
+			pickle.dump(group,f)
+
+		
+
+		return group
+
+
+
+	
 
 def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 						group_type='conflict',
@@ -19,7 +68,8 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 						print_merged_community=False,
 						user_limit=1000,
 						subsample_size=100,
-						save_data=True):
+						save_data=True,
+						group_merge_bool=True):
 
 	#make subreddit one the higher order
 	subreddit_1,subreddit_2=sorted([subreddit_1,subreddit_2])
@@ -29,39 +79,23 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 	#combine both threads
 
 	print("Collecting Threads: ", subreddit_1)
-	all_threads_1=merge_threads(subreddit_1, starting_year, starting_month, ending_year, ending_month)
-	
-
-	group_1= Social_Graph(subreddit=subreddit_1,
-	 						starting_year=starting_year, 
-	 						starting_month= starting_month, 
-	 						ending_year= ending_year,
-	 						 ending_month= ending_month,
-	 						 all_threads=all_threads_1,
-	 						 user_count_limit=user_limit)
 
 
+	group_1=get_graph(subreddit_1, starting_year, starting_month, ending_year, ending_month,user_limit)
 
-	all_threads_1=all_threads_1[0:group_1.thread_limit]
+	all_threads_1=group_1.all_threads[0:group_1.thread_limit]
 
 
 	print("Collecting Threads: ", subreddit_2)
-	all_threads_2=merge_threads(subreddit_2, starting_year, starting_month, ending_year, ending_month)
-	
 
-	group_2= Social_Graph(subreddit=subreddit_2,
-	 						starting_year=starting_year, 
-	 						starting_month= starting_month, 
-	 						ending_year= ending_year,
-	 						 ending_month= ending_month,
-	 						 all_threads= all_threads_2,
-	 						 user_count_limit=user_limit)
 
-	all_threads_2=all_threads_2[0:group_2.thread_limit]
+	group_2=get_graph(subreddit_2, starting_year, starting_month, ending_year, ending_month,user_limit)
 
+	all_threads_2=group_2.all_threads[0:group_2.thread_limit]
 
 	if group_1.user_count==0 or group_2.user_count==0:
 		return
+
 
 	#find common interacting users
 	group_2.inter_group_users_name=group_1.inter_group_users_name= \
@@ -99,28 +133,29 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 	#create the group merge
 	all_threads=all_threads_1+all_threads_2
 
-	group_merge=Social_Graph(subreddit=subreddit_1,
-	 						starting_year=starting_year, 
-	 						starting_month= starting_month, 
-	 						ending_year= ending_year,
-	 						 ending_month= ending_month,
-	 						 all_threads=all_threads)
+	if group_merge_bool:
+		group_merge=Social_Graph(subreddit=subreddit_1,
+		 						starting_year=starting_year, 
+		 						starting_month= starting_month, 
+		 						ending_year= ending_year,
+		 						 ending_month= ending_month,
+		 						 all_threads=all_threads)
 
-	#reassign user name community commitments from both merged groups
-	
-
-
-	for user_name in group_1.user_name_list:
-		group_merge.user_info[user_name]["community"]=1
-
-	for user_name in group_2.user_name_list:
-		group_merge.user_info[user_name]["community"]=2
+		#reassign user name community commitments from both merged groups
 
 
-	for user_name in group_1.inter_group_users_name:
-		group_merge.user_info[user_name]["interaction_status"]=1
 
-	group_merge.update_community() #update the user_id based interactions status
+		for user_name in group_1.user_name_list:
+			group_merge.user_info[user_name]["community"]=1
+
+		for user_name in group_2.user_name_list:
+			group_merge.user_info[user_name]["community"]=2
+
+
+		for user_name in group_1.inter_group_users_name:
+			group_merge.user_info[user_name]["interaction_status"]=1
+
+		group_merge.update_community() #update the user_id based interactions status
 
 
 	#Saving the DATA
@@ -284,7 +319,7 @@ def compare_communities(subreddit_1="prolife",subreddit_2="prochoice",
 		group_1.print_graph()
 		group_2.print_graph()
 
-	if print_merged_community:
+	if print_merged_community and group_merge_bool:
 		group_merge.print_graph()
 
 import os
@@ -330,10 +365,11 @@ for group_type in group_type_list:
 								year_interval=[2016,2016],
 								month_interval=[1,10],
 								print_community_graphs=True,
-								print_merged_community=True,
-								user_limit=2000,
+								print_merged_community=False,
+								user_limit=10,
 								subsample_size=400,
-								save_data=True)
+								save_data=True,
+								group_merge_bool=False)
 			except : 
 
 				
