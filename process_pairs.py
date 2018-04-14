@@ -14,8 +14,8 @@ from sklearn.metrics.pairwise import cosine_similarity as cos
 
 import pdb
 
-from nlp_utils import preproc
-from generate_random_pair import random_thres
+#from nlp_utils import preproc
+#from generate_random_pair import random_thres
 
 
 # stores each control group 
@@ -61,7 +61,46 @@ def pairs_index():
     with open('pairs_index.pickle', 'wb') as handle:
         pickle.dump(all_pairs, handle)
 
+def sport_pairs():
+
+    team_cities = {"leafs": "T", "Torontobluejays": "T", "torontoraptors": "T",
+    "Patriots": "B", "BostonBruins": "B", "redsox": "B", "bostonceltics": "B",
+    "NYGiants": "NY", "rangers": "NY", "NYYankees": "NY", "NYKnicks": "NY",
+    "hawks": "C", "CHICubs": "C", "chicagobulls": "C",
+    "Chargers": "LA", "losangeleskings": "LA", "Dodgers": "LA", "lakers":"LA",
+    "DenverBroncos": "D", "ColoradoAvalanche": "D", "ColoradoRockies": "D", "denvernuggets": "D"}
+
+    team_sports = {"leafs": "hockey", "Torontobluejays": "baseball", "torontoraptors": "basketball",
+    "Patriots": "footbal", "BostonBruins": "hockey", "redsox": "baseball", "bostonceltics": "basketball",
+    "NYGiants": "football", "rangers": "hockey", "NYYankees": "baseball", "NYKnicks": "basketball",
+    "hawks": "hockey", "CHICubs": "baseball", "chicagobulls": "basketball",
+    "Chargers": "football", "losangeleskings": "hockey", "Dodgers": "baseball", "lakers":"basketball",
+    "DenverBroncos": "football", "ColoradoAvalanche": "hockey", "ColoradoRockies": "baseball", "denvernuggets": "basketball"}
+
+    similar_pairs = []
+    clashing_pairs = []
+    random_pairs = []
+
+    for team_a in list(team_cities.keys()):
+        for team_b in list(team_cities.keys()):
+            if team_a != team_b:
+                if team_cities[team_a] == team_cities[team_b]:
+                    similar_pairs.append([team_a, team_b])
+                elif team_sports[team_a] == team_sports[team_b]:
+                    clashing_pairs.append([team_a, team_b])
+                else:
+                    random_pairs.append([team_a, team_b])
+
+    all_pairs = {"conflict": clashing_pairs, "similar": similar_pairs, "random": random_pairs}
+
+    print(clashing_pairs)
+    print(similar_pairs)
+    print(random_pairs)
+
+    with open('sport_pairs.pickle', 'wb') as handle:
+        pickle.dump(all_pairs, handle)
+
 
 if __name__ == '__main__':
 
-    pairs_index()
+    sport_pairs()
