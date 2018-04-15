@@ -71,7 +71,7 @@ def sport_pairs():
     "DenverBroncos": "D", "ColoradoAvalanche": "D", "ColoradoRockies": "D", "denvernuggets": "D"}
 
     team_sports = {"leafs": "hockey", "Torontobluejays": "baseball", "torontoraptors": "basketball",
-    "Patriots": "footbal", "BostonBruins": "hockey", "redsox": "baseball", "bostonceltics": "basketball",
+    "Patriots": "football", "BostonBruins": "hockey", "redsox": "baseball", "bostonceltics": "basketball",
     "NYGiants": "football", "rangers": "hockey", "NYYankees": "baseball", "NYKnicks": "basketball",
     "hawks": "hockey", "CHICubs": "baseball", "chicagobulls": "basketball",
     "Chargers": "football", "losangeleskings": "hockey", "Dodgers": "baseball", "lakers":"basketball",
