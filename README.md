@@ -1,4 +1,4 @@
-## Scripts shoulc be used in this order:
+## Scripts should be used in this order:
 
 1: extract_glove_data.py to build the required .csv file for community embeddings representation
 
