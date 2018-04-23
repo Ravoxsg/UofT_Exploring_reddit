@@ -1,3 +1,4 @@
+# Functions used to create and process graphs in community_connectivity.py
 
 from igraph import *
 import pandas as pd 
@@ -19,9 +20,8 @@ import pickle
 import pdb
 
 
-
-
 class Community():
+
 	def __init__(self,starting_year, 
 				starting_month, 
 				ending_year, 
@@ -49,7 +49,6 @@ class Community():
 		self.inter_group_users_community=[] #1 for current commmunity, 0 for other community
 		self.users_interaction_status=[]#tracks the interactions status of each user based on their id
 
-
 		print(subreddit)
 		self.get_user_info()
 		self.get_hash_user_id()
@@ -74,6 +73,7 @@ class Community():
 			if self.user_count>self.user_count_limit: 
 				self.thread_limit=self.thread_count
 				break
+
 			else: #if thread count is less than limit continue
 				
 				self.thread_count+=1 #count the thread by 1
@@ -84,7 +84,6 @@ class Community():
 				
 				author=subthread["author"] #get the author name
 
-
 				if author not in self.all_user_id_list: #is the author in the list of users? If not then....
 					self.all_user_id_list.append(author)#add user to list
 					self.user_info[author]={} #create a key for the author in the dictionary
@@ -92,7 +91,6 @@ class Community():
 					self.user_info[author]['community']=1
 					self.user_info[author]['interaction_status']=0
 					self.user_count+= 1 #count the author as a apart of the new user count ()
-						
 
 				#if there are users that have commented in the thread in question
 				if len(commenters_ids)>0:
@@ -117,7 +115,6 @@ class Community():
 							else:
 								self.user_info[author]["user_connections"][id_commenter]=[('a', self.thread_count,i+1)] # first initialize the list, save the type of relationship as well as the index of the commmenter
 
-
 					#NOW we focus on the building interactions that involve commenting users being the users of interest
 
 					for i in range(len(commenters_ids)):
@@ -134,7 +131,6 @@ class Community():
 							self.user_info[id_commenter]['interaction_status']=0
 							self.user_count+= 1 #count the user
 
-
 						#connect the user of interest with the author (negative distance because user is commenting with author's post)
 
 						if author!=id_commenter: #ensure the user is not the author to avoid interaction redundancy
@@ -144,7 +140,6 @@ class Community():
 							else:
 								# first initialize the list, save the type of relationship as well as the index of the commmenter
 								self.user_info[id_commenter]["user_connections"][author]=[('a', self.thread_count,-(i+1))] 
-
 
 						#record all user/user interactions, positive distance means that user_j has commented after user_i. 
 						if len(commenters_ids)>1: #if there are more than one user in the post
@@ -183,7 +178,6 @@ class Community():
 		attr_list= [single_connection[attr_index] for single_connection in connections_list]
 		return attr_list
 
-
 	#calculate the distance decay between two functions
 
 	def distance_decay_function(self,connection_distances_list,connection_types_list,a_weight_pheta=[1,1],c_weight_pheta=[1,1]):
@@ -206,14 +200,13 @@ class Community():
 
 	#def loyalty_function():
 
-
 	def get_connection_weights(self):
+
 		print("Configuring Weights...")
 
 		self.id_pairs=[] # list of tuples of connection id's
 		self.pair_weight=[] #list of weights for each id_pair
 		cnt=0
-
 
 		for user_name_i in list(self.user_info.keys()):
 			cnt+=1
@@ -225,15 +218,12 @@ class Community():
 				
 				connection_instances=user_i_connections[user_name_j] #find the connection instances between user i and user j 
 				
-				
 				threads_visited=[]#number of different threads a connection has been to
-
 
 				#connection thread id number
 				threads_visited=self.connection_attribute_collection(connections_list=connection_instances, attr_index=1) #sum of the connections distances
 				unique_threads_visited=list(set(threads_visited))#get the unique threads visited
 				thread_score_factor=1 #scale the score based on the number of unique threads visited? for now keep it as 1
-
 
 				#author-commenter or commenter-commenter relationship
 				connection_types=self.connection_attribute_collection(connections_list=connection_instances, attr_index=0) 
@@ -246,13 +236,10 @@ class Community():
 														a_weight_pheta=[1,1],
 														c_weight_pheta=[1,1]) #score of the strength and direction of the pair
 
-
-
 				connection_score_sum=np.sum(np.asarray(thread_score_factor*distances_decay))#sum the non abs score terms
 				connection_score_abs_sum=np.sum(np.abs(np.asarray(thread_score_factor*distances_decay))) #sum the abs score terms of each score
 
 				weight_score= connection_score_abs_sum
-				
 				
 				#we should add more complicated connections depending on the distance between commentators, order of comment, and the activity level of the author
 
@@ -266,10 +253,11 @@ class Community():
 				#import pdb; pdb.set_trace()
 		print("Finished Configuring Weights")
 
+
 ######################	CREATE THE FLIGHT NETWORK############################
 
-
 class Social_Graph(Community): 
+
 	def __init__(self,starting_year=2016, 
 				starting_month= 1, 
 				ending_year= 2016, 
@@ -282,7 +270,6 @@ class Social_Graph(Community):
 
 		self.interlink_score={}
 		self.Generate_Graph() #create social network
-
 
 	def Calculate_Loyalty(self):
 		#get list of vs_ids
@@ -304,7 +291,9 @@ class Social_Graph(Community):
 		return loyalty_score_list
 
 	def Generate_Graph(self, update= False, generate=False):
+
 		print("Creating Graph")
+
 		if not update: 
 			generate=True
 
@@ -313,10 +302,8 @@ class Social_Graph(Community):
 			self.social_network.add_vertices(self.user_count)
 			self.social_network.add_edges(self.id_pairs)
 
-
 			self.social_network.vs["name"]= self.user_name_list#assign each of the names of each node as teh 3 letter code for the airport
 	
-
 			self.social_network.es["weight"]= self.pair_weight #add the weights
 
 			self.social_network.vs["degree"]=self.get_nodes_degree(range(self.user_count))
@@ -326,17 +313,13 @@ class Social_Graph(Community):
 			#get the 
 		#social_network.vs["label"]=social_network.vs["name"]
 
-		
-
 		self.social_network.vs["interaction_status"]=self.users_interaction_status
-
 
 		self.social_network.vs["community"]=self.users_community_status
 
 		self.k_shell=self.social_network.shell_index(mode=ALL)
 
 		self.social_network.vs["k_shell"]=self.k_shell
-
 
 		print("Finished Creating Graph")
 	#take out all the unconnected nodes
@@ -347,7 +330,6 @@ class Social_Graph(Community):
 		else:
 			return []
 
-
 	def get_nodes_k_shell(self,input_node_id_list): #get the degree of each of the nodes
 		if len(input_node_id_list)>0:
 			return [self.k_shell[node_id] for node_id in input_node_id_list]
@@ -356,6 +338,7 @@ class Social_Graph(Community):
 
 	def get_degree(self,input_node_id):
 		return
+
 	def k_core_subsample(self, subsample_size=100): #trims unconnected nodes
 		print("Removing unconnected nodes...")
 		
@@ -366,8 +349,6 @@ class Social_Graph(Community):
 		delete_vid_list= arg_shells_value[:-subsample_size]
 
 		self.social_network_visual.delete_vertices(delete_vid_list)
-
-	
 
 	def get_inter_linkscore(self,
 							input_node_id_list=[],
@@ -382,8 +363,6 @@ class Social_Graph(Community):
 
 		if output_return:
 			return self.interlink_score
-
-
 
 	def get_inter_neighbor_degree(self,
 									input_node_id_list=[],
@@ -415,13 +394,10 @@ class Social_Graph(Community):
 		if output_return:
 			return self.inter_neighbor_k_shell
 
-
-
 	def update_community(self):
 		self.assign_community_status()
 		self.assign_interaction_status()
 		self.Generate_Graph(update=True)
-
 
 	def print_graph(self, verbose=False):
 		self.k_core_subsample(subsample_size=200)

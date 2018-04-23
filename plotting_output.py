@@ -1,20 +1,19 @@
+# Plots properties of graphs of community pairs
 
 import pickle
 import os 
 import pdb, traceback, sys
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 
+
 #matplotlib.use('Qt4Agg')
 plt.ion()
 
-filename='community_outputs/interaction_info_output_1000'
+filename='community_outputs/interaction_info_output_2000'
 with open(filename,'rb') as fp:
 	output= pickle.load(fp)
-
-
 
 def get_key_pairs(group_specific_output):
 	key_pairs=[]
@@ -207,7 +206,7 @@ plt.show(block=False)
 
 #figure 3
 
-
+"""
 
 degree_key_list=list(user_inter_link_score['random']['both'].keys())
 
@@ -243,7 +242,7 @@ plt.grid(True)
 plt.legend(loc='upper right')
 plt.show(block=False)
 
-
+"""
 
 ###############################################################################################################
 

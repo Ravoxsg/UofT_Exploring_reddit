@@ -1,4 +1,4 @@
-# Utility functions for threads
+# Utility functions that work on extracted threads
 
 import numpy as np 
 import os
@@ -17,7 +17,7 @@ from sklearn.metrics.pairwise import cosine_similarity as cos
 import pdb
 
 
-# merge threads from the same subreddit over different months
+# merges threads from the same subreddit over different consecutive months
 def merge_threads(subreddit, starting_year, starting_month, ending_year, ending_month):
    
     os.chdir('C:/Users/mathi/Documents/ETUDES/4-University of Toronto/2_WINTER/3-Topics in CSS/3_Project/Exploring_Reddit')

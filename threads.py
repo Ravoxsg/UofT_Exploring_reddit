@@ -1,5 +1,5 @@
-# created by Mathieu Ravaut
-# Grabs all the threads regarding a given subreddit in a given period, and saves commenters IDs
+# Grabs all the threads regarding a given subreddit in a given period, and saves commenters IDs for each thread in chronological order
+# Process is monthly-based
 
 import numpy as np 
 import os
@@ -23,23 +23,8 @@ ending_year = 2016
 ending_month = 10
 subreddit = "denvernuggets"
 
-# manual way to convert string into dictionary - useless now
-def string_to_dic(s):
-    s=s.split(",")
-    thread_dico = {}
-    for i in range(len(s)):
-        entry = s[i].split(":")
-        if len(entry)>1:
-            entry[0] = entry[0].replace('"',"")
-            entry[0] = entry[0].replace('{',"")
-            entry[0] = entry[0].replace('}',"")
-            entry[1] = entry[1].replace('"',"")
-            entry[1] = entry[1].replace('{',"")
-            entry[1] = entry[1].replace('}',"")
-            thread_dico[entry[0]] = entry[1]
-    return thread_dico
 
-# create one dictionary per thread that appeared in that period in this suberredit
+# creates one dictionary per thread that appeared in that period in this suberredit
 def initialize_threads(data_path, starting_year, starting_month, ending_year, ending_month, subreddit):
 
     all_threads = [] # list containing all threads of a given subreddit, each thread is a dictionary 
@@ -87,7 +72,7 @@ def initialize_threads(data_path, starting_year, starting_month, ending_year, en
     return all_threads, all_threads_index, thread_names, times, failed_conversions/lines
 
 
-# map commenters ids to threads, and if thread was created before, create a new instance of thread
+# maps commenters ids to threads, and if thread was created before, create a new instance of thread
 def map_comments(all_threads, all_threads_index, thread_names, starting_year, starting_month, ending_year, ending_month):
 
     new_threads = []

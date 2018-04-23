@@ -14,8 +14,8 @@ from sklearn.metrics.pairwise import cosine_similarity as cos
 
 import pdb
 
-#from nlp_utils import preproc
-#from generate_random_pair import random_thres
+from nlp_utils import preproc, c2v_model
+from generate_random_pair import random_thres
 
 
 # stores each control group 
@@ -61,21 +61,8 @@ def pairs_index():
     with open('pairs_index.pickle', 'wb') as handle:
         pickle.dump(all_pairs, handle)
 
-def sport_pairs():
-
-    team_cities = {"leafs": "T", "Torontobluejays": "T", "torontoraptors": "T",
-    "Patriots": "B", "BostonBruins": "B", "redsox": "B", "bostonceltics": "B",
-    "NYGiants": "NY", "rangers": "NY", "NYYankees": "NY", "NYKnicks": "NY",
-    "hawks": "C", "CHICubs": "C", "chicagobulls": "C",
-    "Chargers": "LA", "losangeleskings": "LA", "Dodgers": "LA", "lakers":"LA",
-    "DenverBroncos": "D", "ColoradoAvalanche": "D", "ColoradoRockies": "D", "denvernuggets": "D"}
-
-    team_sports = {"leafs": "hockey", "Torontobluejays": "baseball", "torontoraptors": "basketball",
-    "Patriots": "football", "BostonBruins": "hockey", "redsox": "baseball", "bostonceltics": "basketball",
-    "NYGiants": "football", "rangers": "hockey", "NYYankees": "baseball", "NYKnicks": "basketball",
-    "hawks": "hockey", "CHICubs": "baseball", "chicagobulls": "basketball",
-    "Chargers": "football", "losangeleskings": "hockey", "Dodgers": "baseball", "lakers":"basketball",
-    "DenverBroncos": "football", "ColoradoAvalanche": "hockey", "ColoradoRockies": "baseball", "denvernuggets": "basketball"}
+# stores each control group in the sport teams use case
+def sport_pairs(team_cities, team_sports):
 
     similar_pairs = []
     clashing_pairs = []
@@ -103,7 +90,101 @@ def sport_pairs():
     with open('sport_pairs.pickle', 'wb') as handle:
         pickle.dump(all_pairs, handle)
 
+    return all_pairs
+
+# average distance between two pairs in the words embeddings representation
+def distance_pairs_nlp(all_pairs):
+
+    clashing_distances = []
+    for pair in all_pairs["conflict"]:
+        team_a = pair[0]
+        team_b = pair[1]
+        if (type(preproc(team_a)) != str) and (type(preproc(team_b)) != str):
+            distance = abs(cos(preproc(team_a).reshape((1,300)), preproc(team_b).reshape((1,300)))[0][0])
+            clashing_distances.append(distance)
+
+    similar_distances = []
+    for pair in all_pairs["similar"]:
+        team_a = pair[0]
+        team_b = pair[1]
+        if (type(preproc(team_a)) != str) and (type(preproc(team_b)) != str):
+            distance = abs(cos(preproc(team_a).reshape((1,300)), preproc(team_b).reshape((1,300)))[0][0])
+            similar_distances.append(distance)
+
+    random_distances = []
+    for pair in all_pairs["random"]:
+        team_a = pair[0]
+        team_b = pair[1]
+        if (type(preproc(team_a)) != str) and (type(preproc(team_b)) != str):
+            distance = abs(cos(preproc(team_a).reshape((1,300)), preproc(team_b).reshape((1,300)))[0][0])
+            random_distances.append(distance)
+
+    return np.mean(np.array(clashing_distances)), np.mean(np.array(similar_distances)), np.mean(np.array(random_distances))
+
+# average distance between two pairs in the community embeddings representation
+def distance_pairs_c2v(all_pairs):
+
+    c2v_embeddings = c2v_model('../big files/community2vec_embeddings.csv')
+
+    clashing_distances = []
+    for pair in all_pairs["conflict"]:
+        team_a = pair[0]
+        team_b = pair[1]
+        try:
+            distance = abs(cos(c2v_embeddings[team_a].reshape((1,100)), c2v_embeddings[team_b].reshape((1,100)))[0][0])
+            clashing_distances.append(distance)
+        except KeyError:
+            continue
+
+    similar_distances = []
+    for pair in all_pairs["similar"]:
+        team_a = pair[0]
+        team_b = pair[1]
+        try:
+            distance = abs(cos(c2v_embeddings[team_a].reshape((1,100)), c2v_embeddings[team_b].reshape((1,100)))[0][0])
+            similar_distances.append(distance)
+        except KeyError:
+            continue
+
+    random_distances = []
+    for pair in all_pairs["random"]:
+        team_a = pair[0]
+        team_b = pair[1]
+        try:
+            distance = abs(cos(c2v_embeddings[team_a].reshape((1,100)), c2v_embeddings[team_b].reshape((1,100)))[0][0])
+            random_distances.append(distance)
+        except KeyError:
+            continue
+
+    return np.mean(np.array(clashing_distances)), np.mean(np.array(similar_distances)), np.mean(np.array(random_distances))    
+
 
 if __name__ == '__main__':
 
-    sport_pairs()
+    team_cities = {"leafs": "T", "Torontobluejays": "T", "torontoraptors": "T",
+    "Patriots": "B", "BostonBruins": "B", "redsox": "B", "bostonceltics": "B",
+    "NYGiants": "NY", "rangers": "NY", "NYYankees": "NY", "NYKnicks": "NY",
+    "hawks": "C", "CHICubs": "C", "chicagobulls": "C",
+    "Chargers": "LA", "losangeleskings": "LA", "Dodgers": "LA", "lakers":"LA",
+    "DenverBroncos": "D", "ColoradoAvalanche": "D", "ColoradoRockies": "D", "denvernuggets": "D"}
+
+    team_sports = {"leafs": "hockey", "Torontobluejays": "baseball", "torontoraptors": "basketball",
+    "Patriots": "football", "BostonBruins": "hockey", "redsox": "baseball", "bostonceltics": "basketball",
+    "NYGiants": "football", "rangers": "hockey", "NYYankees": "baseball", "NYKnicks": "basketball",
+    "hawks": "hockey", "CHICubs": "baseball", "chicagobulls": "basketball",
+    "Chargers": "football", "losangeleskings": "hockey", "Dodgers": "baseball", "lakers":"basketball",
+    "DenverBroncos": "football", "ColoradoAvalanche": "hockey", "ColoradoRockies": "baseball", "denvernuggets": "basketball"}
+
+    all_pairs = sport_pairs(team_cities, team_sports)
+
+    print('Distance in word embeddings')
+    clashing_d_nlp, similar_d_nlp, random_d_nlp = distance_pairs_nlp(all_pairs)
+    print('Average distance between clashing pairs: {}'.format(clashing_d_nlp))
+    print('Average distance between similar pairs: {}'.format(similar_d_nlp))
+    print('Average distance between random pairs: {}'.format(random_d_nlp))
+
+    print('Distance in community embeddings')
+    clashing_d_c2v, similar_d_c2v, random_d_c2v = distance_pairs_c2v(all_pairs)
+    print('Average distance between clashing pairs: {}'.format(clashing_d_c2v))
+    print('Average distance between similar pairs: {}'.format(similar_d_c2v))
+    print('Average distance between random pairs: {}'.format(random_d_c2v))

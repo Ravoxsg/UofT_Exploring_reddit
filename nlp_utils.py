@@ -19,7 +19,12 @@ import nltk
 from math import log
 
 
+# PARAMETERS
+# path for the word2vec model trained on Google News
 model = gensim.models.KeyedVectors.load_word2vec_format('C:/Users/mathi/Documents/DATA SCIENCE/KAGGLE/Toxic_Kaggle/GoogleNews-vectors-negative300.bin', binary=True)
+# path for the community2vec model
+c2v_matrix_path = 'C:/Users/mathi/Documents/ETUDES/4-University of Toronto/2_WINTER/3-Topics in CSS/3_Project/big files/community2vec_embeddings.csv'
+# word types frequency list
 words = open("words_by_frequency.txt").read().split()
 wordcost = dict((k, log((i+1)*log(len(words)))) for i,k in enumerate(words))
 maxword = max(len(x) for x in words)
@@ -54,7 +59,7 @@ def infer_spaces(s):
 
     return " ".join(reversed(out))
 
-# process the name of each subreddit
+# processes the name of each subreddit
 def preproc(name):
     # 1: remove underscores
     temp = name.replace('_','')
@@ -94,3 +99,19 @@ def preproc(name):
             return np.mean(np.array(vectors), axis=0)
     except IndexError:
         return 'Subreddit name not recognized by the pos tagging model'
+
+# represents the name of each subreddit via community embeddings
+def c2v_model(input_path=c2v_matrix_path):
+
+    c2v_embeddings = {}
+    f = open(input_path, 'r')
+    for line in tqdm(csv.DictReader(f)):
+        for subreddit in line.keys():
+            if subreddit in c2v_embeddings.keys():
+                c2v_embeddings[subreddit].append(float(line[subreddit]))
+            else:
+                c2v_embeddings[subreddit] = [float(line[subreddit])]
+    for subreddit in c2v_embeddings.keys():
+        c2v_embeddings[subreddit] = np.array(c2v_embeddings[subreddit])
+
+    return c2v_embeddings
